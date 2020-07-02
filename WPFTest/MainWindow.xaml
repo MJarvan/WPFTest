@@ -1,0 +1,191 @@
+﻿<Window x:Class="WPFTest.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPFTest"
+        mc:Ignorable="d"
+        Title="MainWindow" MinHeight="400" MinWidth="800"
+		WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+
+	<Window.Resources>
+		<Style x:Key="WindowStateButtonStyle" TargetType="Button">
+			<!--修改模板属性-->
+			<Setter Property="Template">
+				<Setter.Value>
+					<!--控件模板-->
+					<ControlTemplate TargetType="Button">
+						<!--背景色-->
+						<Border x:Name="back" CornerRadius="0">
+							<Border.BitmapEffect>
+								<OuterGlowBitmapEffect GlowSize="0" GlowColor="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(Button.Background).(SolidColorBrush.Color)}" />
+							</Border.BitmapEffect>
+							<Border.Background>
+								<LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+									<GradientBrush.GradientStops>
+										<GradientStopCollection>
+											<GradientStop Color="Transparent" Offset="0.5"/>
+											<GradientStop Color="Transparent" Offset="0.51"/>
+										</GradientStopCollection>
+									</GradientBrush.GradientStops>
+								</LinearGradientBrush>
+							</Border.Background>
+							<!--前景色及边框-->
+							<Border x:Name="fore" BorderThickness="0" CornerRadius="0" BorderBrush="Transparent">
+								<Border.Background>
+									<LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+										<GradientBrush.GradientStops>
+											<GradientStopCollection>
+												<GradientStop Color="Transparent" Offset="0.5"/>
+												<GradientStop Color="Transparent" Offset="0.51"/>
+											</GradientStopCollection>
+										</GradientBrush.GradientStops>
+									</LinearGradientBrush>
+								</Border.Background>
+								<!--按钮内容-->
+								<ContentPresenter x:Name="content" Content="{TemplateBinding Content}" VerticalAlignment="Center" HorizontalAlignment="Center">
+									<!--<ContentPresenter.BitmapEffect>
+											<DropShadowBitmapEffect Color="#444444" Direction="-90" ShadowDepth="2" Softness="0.1" Opacity="0.3" />
+										</ContentPresenter.BitmapEffect>-->
+								</ContentPresenter>
+							</Border>
+						</Border>
+						<!--触发器-->
+						<ControlTemplate.Triggers>
+							<!--鼠标移入移出-->
+							<Trigger Property="IsMouseOver" Value="True">
+								<Trigger.EnterActions>
+									<BeginStoryboard>
+										<Storyboard>
+											<DoubleAnimation To="6" Duration="0:0:0.1" Storyboard.TargetName="back" Storyboard.TargetProperty="(Border.BitmapEffect).(OuterGlowBitmapEffect.GlowSize)" />
+											<ColorAnimation To="#c6c5c5" BeginTime="0:0:0.1" Duration="0:0:0.1" Storyboard.TargetName="fore" Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" />
+											<ColorAnimation To="#c6c5c5" BeginTime="0:0:0.1" Duration="0:0:0.1" Storyboard.TargetName="fore" Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" />
+										</Storyboard>
+									</BeginStoryboard>
+								</Trigger.EnterActions>
+								<Trigger.ExitActions>
+									<BeginStoryboard>
+										<Storyboard>
+											<DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="back" Storyboard.TargetProperty="(Border.BitmapEffect).(OuterGlowBitmapEffect.GlowSize)" />
+											<ColorAnimation Duration="0:0:0.1" Storyboard.TargetName="fore" Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" />
+											<ColorAnimation Duration="0:0:0.1" Storyboard.TargetName="fore" Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" />
+										</Storyboard>
+									</BeginStoryboard>
+								</Trigger.ExitActions>
+							</Trigger>
+
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</Window.Resources>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="90" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+		<!--菜单栏部分-->
+		<Grid Grid.Row="0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="2*" />
+				<ColumnDefinition Width="3*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<!--改变尺寸部分-->
+			<TextBlock Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="5">改变尺寸：</TextBlock>
+			<ComboBox Grid.Column="0" VerticalAlignment="Center"  Margin="25" Name="sizeCombobox" SelectionChanged="sizeCombobox_SelectionChanged">
+				<ComboBoxItem Tag="16">16×16</ComboBoxItem>
+				<ComboBoxItem Tag="32">32×32</ComboBoxItem>
+				<ComboBoxItem Tag="64">64×64</ComboBoxItem>
+				<ComboBoxItem Tag="128">128×128</ComboBoxItem>
+				<ComboBoxItem Tag="256">256×256</ComboBoxItem>
+			</ComboBox>
+
+			<!--改变底色部分-->
+			<TabControl Grid.Column="1">
+				<TabItem Name="CMD" Header="默认">
+					<Grid>
+						<TextBlock  VerticalAlignment="Top" HorizontalAlignment="Left">改变底色：</TextBlock>
+						<Button Name="DeleteButton" VerticalAlignment="Top" HorizontalAlignment="Right" Content="删除" Click="DeleteButton_Click"></Button>
+						<ComboBox  VerticalAlignment="Bottom" Margin="5,0,5,0" Name="colorCombobox" SelectionChanged="colorCombobox_SelectionChanged" Height="30"></ComboBox>
+					</Grid>
+				</TabItem>
+				<TabItem Header="配色器" MouseEnter="CMD_MouseEnter" MouseLeave="PopupMouseLeave">
+					<Popup Name="popup" PlacementTarget="{Binding ElementName=CMD}" Height="200" Width="525" IsOpen="False" StaysOpen="False">
+						<Border BorderBrush="Black" BorderThickness="1">
+							<Grid Background="White" MouseLeave="PopupMouseLeave">
+								<Grid.RowDefinitions>
+									<RowDefinition Height="*"></RowDefinition>
+									<RowDefinition Height="*"></RowDefinition>
+									<RowDefinition Height="*"></RowDefinition>
+								</Grid.RowDefinitions>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="3*"></ColumnDefinition>
+									<ColumnDefinition Width="*"></ColumnDefinition>
+									<ColumnDefinition Width="2*"></ColumnDefinition>
+									<ColumnDefinition Width="2*"></ColumnDefinition>
+									<ColumnDefinition Width="2*"></ColumnDefinition>
+								</Grid.ColumnDefinitions>
+								<TextBlock Grid.Column="1" Grid.Row="0" Text="Red:" VerticalAlignment="Center" HorizontalAlignment="Left"></TextBlock>
+								<TextBox Grid.Column="2" Grid.Row="0" Name="RTextbox" Text="{Binding ElementName=RSlider,Path=Value,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Width="50" VerticalAlignment="Center" HorizontalAlignment="Center" TextChanged="RGBTextbox_TextChanged" MaxLength="3"></TextBox>
+								<Slider Grid.Column="3" Grid.Row="0" Name="RSlider" Maximum="255" Minimum="0" TickFrequency="1" VerticalAlignment="Center"></Slider>
+
+								<TextBlock Grid.Column="1" Grid.Row="1" Text="Green:" VerticalAlignment="Center" HorizontalAlignment="Left"></TextBlock>
+								<TextBox Grid.Column="2" Grid.Row="1" Name="GTextbox" Text="{Binding ElementName=GSlider,Path=Value,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Width="50" VerticalAlignment="Center" HorizontalAlignment="Center" TextChanged="RGBTextbox_TextChanged" MaxLength="3"></TextBox>
+								<Slider Grid.Column="3" Grid.Row="1" Name="GSlider" Maximum="255" Minimum="0" TickFrequency="1" VerticalAlignment="Center"></Slider>
+
+								<TextBlock Grid.Column="1" Grid.Row="2" Text="Blue:" VerticalAlignment="Center" HorizontalAlignment="Left"></TextBlock>
+								<TextBox Grid.Column="2" Grid.Row="2" Name="BTextbox" Text="{Binding ElementName=BSlider,Path=Value,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Width="50" VerticalAlignment="Center" HorizontalAlignment="Center" TextChanged="RGBTextbox_TextChanged" MaxLength="3"></TextBox>
+								<Slider Grid.Column="3" Grid.Row="2" Name="BSlider" Maximum="255" Minimum="0" TickFrequency="1" VerticalAlignment="Center"></Slider>
+
+								<TextBlock Grid.Column="0" Grid.Row="0" Text="General Color:" VerticalAlignment="Center" HorizontalAlignment="Left"></TextBlock>
+								<Grid Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Margin="10" Name="ColorGrid"></Grid>
+								<Button Margin="10" Grid.Column="4" Grid.Row="2" Name="SaveButton" Content="保存" Click="SaveButton_Click"></Button>
+								<Button Margin="10" Grid.Column="4" Grid.Row="0" Name="MatchButton" Content="应用" Click="MatchButton_Click"></Button>
+								<TextBlock Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="#"></TextBlock>
+								<TextBox Grid.Row="0" Grid.Column="4" Grid.RowSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center" Width="80" Name="FFTextbox" IsReadOnly="True" MaxLength="8"></TextBox>
+							</Grid>
+						</Border>
+					</Popup>
+				</TabItem>
+			</TabControl>
+
+
+			<!--搜索部分-->
+			<StackPanel Grid.Column="2" VerticalAlignment="Center">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="7*"/>
+						<ColumnDefinition Width="2*"/>
+						<ColumnDefinition Width="2*"/>
+						<ColumnDefinition Width="2*"/>
+					</Grid.ColumnDefinitions>
+
+					<StackPanel Grid.Column="0" VerticalAlignment="Center">
+						<TextBox Grid.Column="0" VerticalContentAlignment="Center" MinWidth="150" Margin="10,0,10,0" ToolTip="请输入搜索内容" Height="40" HorizontalAlignment="Center" FontSize="16" Name="searchTextBox" KeyDown="searchTextBox_KeyDown"></TextBox>
+					</StackPanel>
+					<StackPanel Grid.Column="1" VerticalAlignment="Center">
+						<Button Width="50" Margin="5,0,0,0" FontSize="16" HorizontalAlignment="Left" Name="searchButton" Click="searchButton_Click">搜索</Button>
+					</StackPanel>
+					<StackPanel Grid.Column="2" VerticalAlignment="Center">
+						<Button Width="50" Margin="5,0,5,0" FontSize="16" HorizontalAlignment="Left" Name="showAll" Click="showAll_Click">全部</Button>
+					</StackPanel>
+					<StackPanel Grid.Column="3" VerticalAlignment="Center">
+						<Button Width="50" Margin="5,0,5,0" FontSize="16" HorizontalAlignment="Left" Name="importAll" Click="importAll_Click">导出</Button>
+					</StackPanel>
+				</Grid>
+			</StackPanel>
+			<Button Name="choiceButton" Grid.Column="3" FontSize="16" Content="选择路径" Click="choiceButton_Click"></Button>
+		</Grid>
+
+		<!--下方图片预览内容部分-->
+		<ScrollViewer Name="scrollviewer" Grid.Row="1" AllowDrop="True">
+			<WrapPanel Name="wrappanel" Orientation="Horizontal">
+
+			</WrapPanel>
+		</ScrollViewer>
+	</Grid>
+</Window>

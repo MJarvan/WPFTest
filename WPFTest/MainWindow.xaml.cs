@@ -604,24 +604,25 @@ namespace WPFTest
 			if (fileName.Contains("、") || fileName.Contains("(") || fileName.Contains(")") || fileName.Contains("（") ||
 			   fileName.Contains("）") || fileName.Contains("-") || fileName.Contains("[") || fileName.Contains("]") ||
 			   fileName.Contains("&") || fileName.Contains("{") || fileName.Contains("}") || fileName.Contains("$") ||
-			   fileName.Contains("`") || fileName.Contains("~") || fileName.Contains("@") || fileName.Contains("%"))
+			   fileName.Contains("`") || fileName.Contains("~") || fileName.Contains("@") || fileName.Contains("%") || fileName.Contains("#"))
 			{
-				fileName = fileName.Replace("(", "_");
-				fileName = fileName.Replace(")", "_");
-				fileName = fileName.Replace("（", "_");
-				fileName = fileName.Replace("）", "_");
-				fileName = fileName.Replace("、", "_");
-				fileName = fileName.Replace("-", "_");
-				fileName = fileName.Replace("[", "_");
-				fileName = fileName.Replace("]", "_");
-				fileName = fileName.Replace("&", "_");
-				fileName = fileName.Replace("{", "_");
-				fileName = fileName.Replace("}", "_");
-				fileName = fileName.Replace("$", "_");
-				fileName = fileName.Replace("`", "_");
-				fileName = fileName.Replace("~", "_");
-				fileName = fileName.Replace("@", "_");
-				fileName = fileName.Replace("%", "_");
+				fileName = fileName.Replace("(", string.Empty);
+				fileName = fileName.Replace(")", string.Empty);
+				fileName = fileName.Replace("（", string.Empty);
+				fileName = fileName.Replace("）", string.Empty);
+				fileName = fileName.Replace("、", string.Empty);
+				fileName = fileName.Replace("-", string.Empty);
+				fileName = fileName.Replace("[", string.Empty);
+				fileName = fileName.Replace("]", string.Empty);
+				fileName = fileName.Replace("&", string.Empty);
+				fileName = fileName.Replace("{", string.Empty);
+				fileName = fileName.Replace("}", string.Empty);
+				fileName = fileName.Replace("$", string.Empty);
+				fileName = fileName.Replace("`", string.Empty);
+				fileName = fileName.Replace("~", string.Empty);
+				fileName = fileName.Replace("@", string.Empty);
+				fileName = fileName.Replace("%", string.Empty);
+				fileName = fileName.Replace("%", string.Empty);
 			}
 
 			return fileName;

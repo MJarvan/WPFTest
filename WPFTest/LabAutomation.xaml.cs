@@ -17,6 +17,7 @@ using NPOI.SS.UserModel;
 using NPOI.HSSF.Util;
 using System.Windows.Controls.Primitives;
 using NPOI.SS.Util;
+using System.Diagnostics;
 
 namespace WPFTest
 {
@@ -50,7 +51,9 @@ namespace WPFTest
 		/// </summary>
 		string ReportNo = string.Empty;
 
+		//调整一个表格的样品总列数
 		int importTakeNum = 8;
+		//调整一个表格的总列数
 		int sheetColumnCount = 10;
 		/// <summary>
 		/// 每个化合物的datatable
@@ -111,6 +114,10 @@ namespace WPFTest
 			e.Handled = true;
 		}
 
+		/// <summary>
+		/// 通过文本创造核心内容
+		/// </summary>
+		/// <param name="path"></param>
 		private void CreateTxt(string path)
 		{
 			AllClear();
@@ -139,7 +146,8 @@ namespace WPFTest
 				{
 					CreateDataTable(tabControl,vs);
 				}
-				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白","");
+				AddParallelSamplesToList();
+				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
 				compoundsNameList.Add(keyValuePair);
 				maingrid.Children.Add(tabControl);
 				ReportNoLabel.Content = ReportNo;
@@ -246,9 +254,6 @@ namespace WPFTest
 			tabItem.Content = dg;
 			tabControl.Items.Add(tabItem);
 			compoundsDataSet.Tables.Add(newdatatable);
-
-			AddParallelSamplesToList();
-
 		}
 
 		/// <summary>
@@ -334,10 +339,10 @@ namespace WPFTest
 				Count++;
 			}
 
-			//导出Excel
+			//自动调整列距
 			for (int i = 0; i < sheetColumnCount * Count; i++)
 			{
-				if (i == 0)
+				if (i % sheetColumnCount == 0)
 				{
 					sheet.SetColumnWidth(i,30 * 256);
 				}
@@ -346,8 +351,14 @@ namespace WPFTest
 					sheet.AutoSizeColumn(i);
 				}
 			}
-				
-			System.Windows.Forms.FolderBrowserDialog fbd = new System.Windows.Forms.FolderBrowserDialog();
+
+			ExportToExcel(workbook);
+		}
+
+		private void ExportToExcel(HSSFWorkbook workbook)
+		{
+			//自己选位置
+			/*System.Windows.Forms.FolderBrowserDialog fbd = new System.Windows.Forms.FolderBrowserDialog();
 			fbd.ShowDialog();
 			if (fbd.SelectedPath != string.Empty)
 			{
@@ -358,39 +369,57 @@ namespace WPFTest
 					workbook.Write(stream);
 					stream.Flush();
 				}
+			}*/
+			//特定位置
+			try
+			{
+				string path = @"D:\CreateExcel\" + ReportNo + @"\";
+				//创建用户临时图片文件夹或者清空临时文件夹所有文件
+				if (!Directory.Exists(path))
+				{
+					Directory.CreateDirectory(path);
+				}
+				string filename = workbook.GetSheetAt(0).SheetName + ".xls";
+				string fullpath = System.IO.Path.Combine(path,filename);
+				if (File.Exists(fullpath))
+				{
+					File.Delete(fullpath);
+				}
+				using (FileStream stream = new FileStream(fullpath,FileMode.OpenOrCreate,FileAccess.ReadWrite))
+				{
+					workbook.Write(stream);
+					stream.Flush();
+				}
+				Process process = new Process();
+				ProcessStartInfo processStartInfo = new ProcessStartInfo(fullpath);
+				processStartInfo.UseShellExecute = true;
+				process.StartInfo = processStartInfo;
+				process.Start();
 			}
-			
-
+			catch (Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
 		}
 
 		private void CreateSheet(ISheet sheet,HSSFCellStyle cellStyle,List<string> cellList,int advantageNum,int Count)
 		{
-			/*List<string> cellList = sampleNameList.Take(importTakeNum).ToList();
-			int num = 0;
-			string banlance = "Dup";
-			if (cellList.Exists(x => x.Contains(banlance)))
-			{
-				cellList.RemoveAt(cellList.Count - 1);
-				num = cellList.IndexOf(cellList.Where(x => x.Contains(banlance)).FirstOrDefault()) + 1;
-				cellList.Insert(num,cellList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
-			}*/
 			//前四行
 			for (int i = 0; i < 4; i++)
 			{
 				//第一个单元格 公式
-				HSSFRow row = (Count == 1) ? (HSSFRow)sheet.CreateRow(i) : (HSSFRow)sheet.GetRow(i); //创建行或者获取行
+				HSSFRow row = (Count == 0) ? (HSSFRow)sheet.CreateRow(i) : (HSSFRow)sheet.GetRow(i); //创建行或者获取行
 				row.HeightInPoints = 20;
 
 				if (i == 3)
 				{
 					row.HeightInPoints = 50;
 				}
-
+				var formulacell = (Count == 0) ? row.CreateCell(i) : row.CreateCell(sheetColumnCount * Count);
+				formulacell.CellStyle = cellStyle;
 				if (i == 0)
 				{
-					var formulacell = (Count == 1) ? row.CreateCell(i) : row.CreateCell(sheetColumnCount * Count);
-					formulacell.CellStyle = cellStyle;
-					CellRangeAddress region = (Count == 1) ? new CellRangeAddress(0,3,i,i) : new CellRangeAddress(0,3,sheetColumnCount * Count,sheetColumnCount * Count);
+					CellRangeAddress region = new CellRangeAddress(0,3,sheetColumnCount * Count,sheetColumnCount * Count);
 					sheet.AddMergedRegion(region);
 					StringBuilder stringBuilder = new StringBuilder("计算公式：C = Ci×f×V1 / V\n");
 					stringBuilder.Append("式中：C——样品中目标物浓度\n");
@@ -401,117 +430,119 @@ namespace WPFTest
 					formulacell.SetCellValue(stringBuilder.ToString());//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
 				}
 				//从第二列开始
-
-				//要去307问一下简垲琳到底排版是怎么弄
 				for (int j = sheetColumnCount * Count + 1; j < sheetColumnCount * Count + sheetColumnCount; j++)
 				{
 					var cell = row.CreateCell(j);
 					cell.CellStyle = cellStyle;
-					if (j == 9)
+					//按照已有的弄
+					if ((j - sheetColumnCount * Count) - 2 >= cellList.Count)
 					{
 						string setvalue = (i == 0) ? "以下空白" : "";
 						cell.SetCellValue(setvalue);
 					}
 					else if (i == (int)samplingquantityLabel.Tag)
 					{
-						if (j - 2 == advantageNum)
+						if ((j - sheetColumnCount * Count) - 2 == advantageNum)
 						{
 							cell.SetCellValue("-");
 							continue;
 						}
-						string setvalue = (j == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+						string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 						cell.SetCellValue(setvalue);
 					}
 					else if (i == (int)constantvolumeLabel.Tag)
 					{
-						if (j - 2 == advantageNum)
+						if ((j - sheetColumnCount * Count) - 2 == advantageNum)
 						{
 							cell.SetCellValue("-");
 							continue;
 						}
-						string setvalue = (j == 1) ? constantvolumeLabel.Content.ToString() : constantvolumeTextBox.Text;
+						string setvalue = ((j - sheetColumnCount * Count) == 1) ? constantvolumeLabel.Content.ToString() : constantvolumeTextBox.Text;
 						cell.SetCellValue(setvalue);
 					}
 					else if (i == (int)dilutionratioLabel.Tag)
 					{
-						if (j - 2 == advantageNum)
+						if ((j - sheetColumnCount * Count) - 2 == advantageNum)
 						{
 							cell.SetCellValue("-");
 							continue;
 						}
-						string setvalue = (j == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
+						string setvalue = ((j - sheetColumnCount * Count) == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
 						cell.SetCellValue(setvalue);
 					}
-					else if (j == 1)
+					else if ((j - sheetColumnCount * Count) == 1)
 					{
 						cell.SetCellValue("样品编号");
 					}
-					else
+					else if((j - sheetColumnCount * Count) - 2 < cellList.Count)
 					{
-						cell.SetCellValue(cellList[j - 2]);
+						cell.SetCellValue(cellList[(j - sheetColumnCount * Count) - 2]);
 					}
 				}
-				
 			}
 			//第四行表头
-			HSSFRow HearderRow = (HSSFRow)sheet.CreateRow(4); //创建行
+			HSSFRow HearderRow = (Count == 0) ? (HSSFRow)sheet.CreateRow(4) : (HSSFRow)sheet.GetRow(4); //创建行或者获取行
 			HearderRow.HeightInPoints = 20;
-			for (int k = 0; k < sheetColumnCount; k++)
+			for (int k = sheetColumnCount * Count; k < sheetColumnCount * (Count + 1); k++)
 			{
 				var cell = HearderRow.CreateCell(k);
 				cell.CellStyle = cellStyle;
-				if (k == 0)
+				if (!sheet.MergedRegions.Exists(x => x.FirstRow == 4 && x.LastRow == 4 && x.FirstColumn == 2 + sheetColumnCount * Count && x.LastColumn == 9 + sheetColumnCount * Count))
+				{
+					CellRangeAddress newregion = new CellRangeAddress(4,4,2 + sheetColumnCount * Count,9 + sheetColumnCount * Count);
+					sheet.AddMergedRegion(newregion);
+				}
+				if (k == 0 + sheetColumnCount * Count)
 				{
 					cell.SetCellValue("目标化合物");//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
 				}
-				else if (k == 1)
+				else if (k == 1 + sheetColumnCount * Count)
 				{
 					cell.SetCellValue("最低检测质量浓度(mg/L)");
 				}
-				else if (k == 2)
+				else if (k == 2 + sheetColumnCount * Count)
 				{
 					cell.SetCellValue("目标化合物浓度 C (mg/L)");
 				}
 			}
-			CellRangeAddress newregion = new CellRangeAddress(4,4,2,9);
-			sheet.AddMergedRegion(newregion);
-
 
 			for (int k = 0; k < compoundsNameList.Count; k++)
 			{
-				HSSFRow compoundsRow = (HSSFRow)sheet.CreateRow(4 + k + 1); //创建行
+				HSSFRow compoundsRow = (Count == 0) ? (HSSFRow)sheet.CreateRow(4 + k + 1) : (HSSFRow)sheet.GetRow(4 + k + 1); //创建行或者获取行
 				compoundsRow.HeightInPoints = 20;
-				var headerCell = compoundsRow.CreateCell(0);
+				//var headerCell = compoundsRow.CreateCell(0);
 				string compoundName = compoundsNameList[k].Key;
-				headerCell.SetCellValue(compoundName);
-				headerCell.CellStyle = cellStyle;
+				//headerCell.SetCellValue(compoundName);
+				//headerCell.CellStyle = cellStyle;
 				string modelC = compoundsNameList[k].Value;
-				for (int l = 1; l < sheetColumnCount; l++)
+				for (int l = sheetColumnCount * Count; l < sheetColumnCount * Count + sheetColumnCount; l++)
 				{
 					var compoundsCell = compoundsRow.CreateCell(l);
 					compoundsCell.CellStyle = cellStyle;
-					if (k != compoundsNameList.Count - 1)
 					{
-
-						//第一列是判断标准
-						if (l == 1)
+						//第一列是化合物名称
+						if (l - sheetColumnCount * Count == 0)
+						{
+							compoundsCell.SetCellValue(compoundName);
+						}
+						//第二列是判断标准
+						else if (l - sheetColumnCount * Count == 1)
 						{
 							compoundsCell.SetCellValue(modelC);
 						}
-						else if (l != 9)
+						else if (l - sheetColumnCount * Count - 2 < cellList.Count)
 						{
-							string sampleName = cellList[l - 2];
-							string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
-							compoundsCell.SetCellValue(setvalue);
+							if (modelC == string.Empty)
+							{
+								compoundsCell.SetCellValue(string.Empty);
+							}
+							else
+							{
+								string sampleName = cellList[l - sheetColumnCount * Count - 2];
+								string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
+								compoundsCell.SetCellValue(setvalue);
+							}
 						}
-						else
-						{
-							compoundsCell.SetCellValue(string.Empty);
-						}
-					}
-					else
-					{
-						compoundsCell.SetCellValue(string.Empty);
 					}
 				}
 			}

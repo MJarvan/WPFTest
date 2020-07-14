@@ -55,8 +55,22 @@
                     </Grid.RowDefinitions>
                     <!--搜索部分-->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Label Content="搜索信息：" VerticalContentAlignment="Center"></Label>
-                        <TextBox VerticalContentAlignment="Center" MinWidth="150" Margin="10,0,10,0" ToolTip="请输入搜索内容" Name="searchTextBox" TextChanged="searchTextBox_TextChanged"></TextBox>
+                        <Label Content="搜索信息：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <TextBox VerticalContentAlignment="Center" MinWidth="100" Margin="10,0,10,0" ToolTip="请输入搜索内容" Name="searchTextBox" TextChanged="searchTextBox_TextChanged"></TextBox>
+                        <Label Content="计算精度：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <ComboBox VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="50" Name="ComboBox">
+                            <ComboBoxItem Tag="0" Content="默认" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="1"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="2"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="3"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="4"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="5"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="6"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="7"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="8"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="9"></ComboBoxItem>
+                            <ComboBoxItem Tag="0" Content="10"></ComboBoxItem>
+                        </ComboBox>
                         <Label VerticalContentAlignment="Center" Margin="10,0,10,0" Content="委托单号："></Label>
                         <Label VerticalContentAlignment="Center" Margin="10,0,10,0" Name="ReportNoLabel"></Label>
                     </StackPanel>

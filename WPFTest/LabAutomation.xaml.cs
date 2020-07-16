@@ -123,7 +123,6 @@ namespace WPFTest
 			AllClear();
 			if (File.Exists(path))
 			{
-				
 				List<string> alldata = File.ReadAllLines(path,Encoding.UTF8).ToList();
 				List<string> data = new List<string>();
 				TabControl tabControl = new TabControl();
@@ -142,9 +141,15 @@ namespace WPFTest
 						data.Clear();
 					}
 				}
+				bool isOK = false;
+
 				foreach (List<string> vs in txtList)
 				{
-					CreateDataTable(tabControl,vs);
+					isOK = CreateDataTable(tabControl,vs);
+					if (!isOK)
+					{
+						return;
+					}
 				}
 				AddParallelSamplesToList();
 				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
@@ -163,16 +168,23 @@ namespace WPFTest
 			compoundsNameList.Clear();
 			sampleNameList.Clear();
 			ReportNo = string.Empty;
-			compoundsDataSet.Clear();
+			compoundsDataSet.Tables.Clear();
 			maingrid.Children.Clear();
 		}
 
-		private void CreateDataTable(TabControl tabControl,List<string> vs)
+		private bool CreateDataTable(TabControl tabControl,List<string> vs)
 		{
 			//前三列是datatable的属性名和表头需要单独保存
 			//string[] id = vs[0].Split("\t");
 			sampleNameList.Clear();
 			string[] name = vs[1].Split("\t");
+
+			//缺少自我填写的最低检测质量浓度
+			if (name.Length < 3)
+			{
+				MessageBox.Show(name[1] + "缺少最低检测质量浓度，请补充填写！");
+				return false;
+			}
 			KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(name[1],name[2]);
 			compoundsNameList.Add(keyValuePair);
 
@@ -186,7 +198,6 @@ namespace WPFTest
 			}
 			for (int j = 3; j < vs.Count; j++)
 			{
-				//List<string> data = vs[j].Split("\t").ToList();
 				DataRow dr = datatable.NewRow();
 				dr.ItemArray = vs[j].Split("\t");
 				datatable.Rows.Add(dr);
@@ -215,9 +226,6 @@ namespace WPFTest
 			//根据有机组要求只要三列
 			DataTable newdatatable = new DataTable();
 			newdatatable.TableName = datatable.TableName;
-			newdatatable.Columns.Add("编号");
-			newdatatable.Columns.Add("数据文件名");
-			newdatatable.Columns.Add("浓度");
 			//for (int l = 0; l < datatable.Columns.Count; l++)
 			//{
 			//	if (datatable.Columns[l].ColumnName == "编号" || datatable.Columns[l].ColumnName == "数据文件名" || datatable.Columns[l].ColumnName == "浓度")
@@ -226,24 +234,21 @@ namespace WPFTest
 			//		newdatatable.Columns.Add(dataColumn.ColumnName,dataColumn.DataType);
 			//	}
 			//}
+			newdatatable.Columns.Add("编号");
+			newdatatable.Columns.Add("数据文件名");
+			newdatatable.Columns.Add("浓度");
+
 			for (int i = 0; i < datatable.Rows.Count; i++)
 			{
 				DataRow dr = newdatatable.NewRow();
-				for (int j = 0; j < datatable.Columns.Count; j++)
+				for (int j = 0; j < newdatatable.Columns.Count; j++)
 				{
-					string ColumnName = datatable.Columns[j].ColumnName;
-					for (int k = 0; k < newdatatable.Columns.Count; k++)
-					{
-						string newColumnName = newdatatable.Columns[k].ColumnName;
-
-						if (newColumnName == ColumnName)
-						{
-							dr[ColumnName] = datatable.Rows[i][j];
-						}
-					}
+					string newColumnName = newdatatable.Columns[j].ColumnName;
+					dr[newColumnName] = datatable.Rows[i][newColumnName];
 				}
 				newdatatable.Rows.Add(dr);
 			}
+
 			TabItem tabItem = new TabItem();
 			tabItem.Header = name[1] + " | " + name[2];
 			DataGrid dg = new DataGrid();
@@ -254,6 +259,8 @@ namespace WPFTest
 			tabItem.Content = dg;
 			tabControl.Items.Add(tabItem);
 			compoundsDataSet.Tables.Add(newdatatable);
+
+			return true;
 		}
 
 		/// <summary>
@@ -570,13 +577,13 @@ namespace WPFTest
 		{
 			//计算公式C = Ci×f×V1 / V
 			//稀释倍数
-			float f = float.Parse(dilutionratioTextBox.Text);
+			double f = double.Parse(dilutionratioTextBox.Text);
 			//定容体积
-			float V1 = float.Parse(constantvolumeTextBox.Text);
+			double V1 = double.Parse(constantvolumeTextBox.Text);
 			//取样量
-			float V = float.Parse(samplingquantityTextBox.Text);
+			double V = double.Parse(samplingquantityTextBox.Text);
 			//目标物上机测定浓度
-			float Ci;
+			double Ci;
 			foreach (DataTable dataTable in compoundsDataSet.Tables)
 			{
 				//找到该化合物对应的datatable
@@ -593,12 +600,13 @@ namespace WPFTest
 								string potency = dataTable.Rows[i]["浓度"].ToString();
 								if (!potency.Contains("-"))
 								{
-									Ci = float.Parse(potency);
+									Ci = double.Parse(potency);
 									//公式计算
-									float C = Ci * f * V1 / V;
-									if (C > float.Parse(modelC))
+									double C = Ci * f * V1 / V;
+									if (C > double.Parse(modelC))
 									{
-										return C.ToString();
+										string realC = CalculateAccuracyC(compoundName,C.ToString());
+										return realC;
 									}
 								}
 							}
@@ -609,6 +617,47 @@ namespace WPFTest
 			return "<" + modelC;
 		}
 
+		private string CalculateAccuracyC(string compoundName,string C)
+		{
+			double answer = double.NaN;
+			string accuracy = AccuracyComboBox.SelectedItem.ToString();
+			int num = 0;
+			//选择默认方式
+			if (accuracy == AccuracyComboBox.Items[0].ToString())
+			{
+				foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
+				{
+					if (keyValuePair.Key == compoundName)
+					{
+						string[] beforeValue = keyValuePair.Value.Split(".");
+						answer = Math.Round(double.Parse(C),beforeValue[beforeValue.Length - 1].Length);
+						string[] afterValue = answer.ToString().Trim().Split(".");
+						num = beforeValue[beforeValue.Length - 1].Length - afterValue[afterValue.Length - 1].Length;
+					}
+				}
+			}
+			//选择其他位数
+			else
+			{
+				string[] beforeValue = accuracy.Split(":");
+
+				answer = Math.Round(double.Parse(C),int.Parse(beforeValue[beforeValue.Length - 1]));
+				string[] afterValue = answer.ToString().Trim().Split(".");
+				num = int.Parse(beforeValue[beforeValue.Length - 1]) - afterValue[afterValue.Length - 1].Length;
+
+			}
+			//计算后补零
+			if (num != 0)
+			{
+				string newanswer = answer.ToString();
+				for (int i = 0; i < num; i++)
+				{
+					newanswer = newanswer + "0";
+				}
+				return newanswer;
+			}
+			return answer.ToString().Trim();
+		}
 
 		/// <summary>
 		/// 搜索

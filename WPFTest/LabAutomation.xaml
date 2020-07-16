@@ -60,6 +60,7 @@
                         <Label Content="计算精度：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
                         <ComboBox VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="50" Name="AccuracyComboBox">
                             <ComboBoxItem Content="默认" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Content="0"></ComboBoxItem>
                             <ComboBoxItem Content="1"></ComboBoxItem>
                             <ComboBoxItem Content="2"></ComboBoxItem>
                             <ComboBoxItem Content="3"></ComboBoxItem>

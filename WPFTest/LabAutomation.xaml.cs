@@ -170,6 +170,7 @@ namespace WPFTest
 			ReportNo = string.Empty;
 			compoundsDataSet.Tables.Clear();
 			maingrid.Children.Clear();
+			newsampleNameList.Clear();
 		}
 
 		private bool CreateDataTable(TabControl tabControl,List<string> vs)
@@ -271,8 +272,9 @@ namespace WPFTest
 			//先加完所有的平行样再分组比较好
 			List<string> psNameList = sampleNameList.ToList();
 			List<int> numList = new List<int>();
-			string banlance = "Dup";
-			List<string> addNameList = psNameList.Where(x => x.Contains(banlance)).ToList();
+			string Ebanlance = "Dup";
+			string Cbanlance = "平均";
+			List<string> addNameList = psNameList.Where(x => x.Contains(Ebanlance)).ToList();
 			for (int i = 0; i < addNameList.Count; i++)
 			{
 				int num = psNameList.IndexOf(addNameList[i]) + 1;
@@ -282,12 +284,13 @@ namespace WPFTest
 			{
 				if (j == 0)
 				{
-					psNameList.Insert(numList[j],psNameList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
+					//psNameList.Insert(numList[j],psNameList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
+					psNameList.Insert(numList[j],addNameList[j].Replace(Ebanlance,Cbanlance));
 				}
 				else
 				{
-					psNameList.Insert(numList[j] + j,psNameList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
-
+					//psNameList.Insert(numList[j] + j,psNameList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
+					psNameList.Insert(numList[j] + j,addNameList[j].Replace(Ebanlance,Cbanlance));
 				}
 			}
 
@@ -295,13 +298,14 @@ namespace WPFTest
 
 			for (int i = 0; i < Count; i++)
 			{
+				int num = -1;
 				if (i == Count - 1)
 				{
+					//如果这里8个里面同时有两个平均怎么办，目前只能手动处理
 					List<string> cellList = psNameList.ToList();
-					int num = 0;
-					if (cellList.Exists(x => x.Contains(banlance)))
+					if (cellList.Exists(x => x.Contains(Cbanlance)))
 					{
-						num = cellList.IndexOf(cellList.Where(x => x.Contains(banlance)).FirstOrDefault()) + 1;
+						num = cellList.IndexOf(cellList.Where(x => x.Contains(Cbanlance)).FirstOrDefault());
 					}
 					KeyValuePair<List<string>,int> keyValuePair = new KeyValuePair<List<string>,int>(cellList,num);
 					newsampleNameList.Add(keyValuePair);
@@ -310,10 +314,9 @@ namespace WPFTest
 				{
 					List<string> cellList = psNameList.Take(importTakeNum).ToList();
 					psNameList.RemoveRange(0,importTakeNum);
-					int num = 0;
-					if (cellList.Exists(x => x.Contains(banlance)))
+					if (cellList.Exists(x => x.Contains(Cbanlance)))
 					{
-						num = cellList.IndexOf(cellList.Where(x => x.Contains(banlance)).FirstOrDefault()) + 1;
+						num = cellList.IndexOf(cellList.Where(x => x.Contains(Cbanlance)).FirstOrDefault());
 					}
 					KeyValuePair<List<string>,int> keyValuePair = new KeyValuePair<List<string>,int>(cellList,num);
 					newsampleNameList.Add(keyValuePair);
@@ -449,7 +452,7 @@ namespace WPFTest
 					}
 					else if (i == (int)samplingquantityLabel.Tag)
 					{
-						if ((j - sheetColumnCount * Count) - 2 == advantageNum)
+						if ((j - sheetColumnCount * Count) - 2 == advantageNum && advantageNum >= 0)
 						{
 							cell.SetCellValue("-");
 							continue;
@@ -459,7 +462,7 @@ namespace WPFTest
 					}
 					else if (i == (int)constantvolumeLabel.Tag)
 					{
-						if ((j - sheetColumnCount * Count) - 2 == advantageNum)
+						if ((j - sheetColumnCount * Count) - 2 == advantageNum && advantageNum >= 0)
 						{
 							cell.SetCellValue("-");
 							continue;
@@ -469,7 +472,7 @@ namespace WPFTest
 					}
 					else if (i == (int)dilutionratioLabel.Tag)
 					{
-						if ((j - sheetColumnCount * Count) - 2 == advantageNum)
+						if ((j - sheetColumnCount * Count) - 2 == advantageNum && advantageNum >= 0)
 						{
 							cell.SetCellValue("-");
 							continue;
@@ -627,10 +630,19 @@ namespace WPFTest
 			{
 				foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
 				{
+
 					if (keyValuePair.Key == compoundName)
 					{
 						string[] beforeValue = keyValuePair.Value.Split(".");
-						answer = Math.Round(double.Parse(C),beforeValue[beforeValue.Length - 1].Length);
+						//没有小数点的
+						if (beforeValue.Length < 2)
+						{
+							answer = Math.Round(double.Parse(C),0);
+						}
+						else
+						{
+							answer = Math.Round(double.Parse(C),beforeValue[beforeValue.Length - 1].Length);
+						}
 						string[] afterValue = answer.ToString().Trim().Split(".");
 						num = beforeValue[beforeValue.Length - 1].Length - afterValue[afterValue.Length - 1].Length;
 					}

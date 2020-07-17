@@ -18,6 +18,10 @@ using NPOI.HSSF.Util;
 using System.Windows.Controls.Primitives;
 using NPOI.SS.Util;
 using System.Diagnostics;
+using Microsoft.CSharp;
+using System.CodeDom.Compiler;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace WPFTest
 {
@@ -74,22 +78,6 @@ namespace WPFTest
 		}
 
 		/// <summary>
-		/// 选择路径
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void choiceButton_Click(object sender,RoutedEventArgs e)
-		{
-			maingrid.Children.Clear();
-			System.Windows.Forms.OpenFileDialog ofd = new System.Windows.Forms.OpenFileDialog();
-			ofd.ShowDialog();
-			if (ofd.FileName != string.Empty)
-			{
-				CreateTxt(ofd.FileName);
-			}
-		}
-
-		/// <summary>
 		/// 拖动放下
 		/// </summary>
 		/// <param name="sender"></param>
@@ -106,10 +94,11 @@ namespace WPFTest
 				e.Effects = DragDropEffects.Link;
 
 				string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-				foreach (string path in paths)
+				/*foreach (string path in paths)
 				{
 					CreateTxt(path);
-				}
+				}*/
+				CreateTxt(paths[0]);
 			}
 			e.Handled = true;
 		}
@@ -207,6 +196,7 @@ namespace WPFTest
 			for (int k = 0; k < datatable.Rows.Count; k++)
 			{
 				string oldname = datatable.Rows[k]["数据文件名"].ToString();
+				//切割名字需要优化
 				string[] newname = oldname.Replace(".gcd","").Split(" ");
 
 				if (sampleNameList.Count != datatable.Rows.Count)
@@ -284,12 +274,10 @@ namespace WPFTest
 			{
 				if (j == 0)
 				{
-					//psNameList.Insert(numList[j],psNameList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
 					psNameList.Insert(numList[j],addNameList[j].Replace(Ebanlance,Cbanlance));
 				}
 				else
 				{
-					//psNameList.Insert(numList[j] + j,psNameList.Where(x => x.Contains(banlance)).FirstOrDefault().Replace(banlance,"平均"));
 					psNameList.Insert(numList[j] + j,addNameList[j].Replace(Ebanlance,Cbanlance));
 				}
 			}
@@ -332,7 +320,7 @@ namespace WPFTest
 		/// <param name="e"></param>
 		private void importAll_Click(object sender,RoutedEventArgs e)
 		{
-			if (compoundsNameList.Count == 0)
+			if (newsampleNameList.Count == 0)
 			{
 				return;
 			}
@@ -354,7 +342,7 @@ namespace WPFTest
 			{
 				if (i % sheetColumnCount == 0)
 				{
-					sheet.SetColumnWidth(i,30 * 256);
+					sheet.SetColumnWidth(i,40 * 256);
 				}
 				else
 				{
@@ -383,13 +371,13 @@ namespace WPFTest
 			//特定位置
 			try
 			{
-				string path = @"D:\CreateExcel\" + ReportNo + @"\";
+				string path = @"E:\CreateExcel\" + ReportNo + @"\";
 				//创建用户临时图片文件夹或者清空临时文件夹所有文件
 				if (!Directory.Exists(path))
 				{
 					Directory.CreateDirectory(path);
 				}
-				string filename = workbook.GetSheetAt(0).SheetName + ".xls";
+				string filename = ReportNo + "-" + workbook.GetSheetAt(0).SheetName + ".xls";
 				string fullpath = System.IO.Path.Combine(path,filename);
 				if (File.Exists(fullpath))
 				{
@@ -431,13 +419,18 @@ namespace WPFTest
 				{
 					CellRangeAddress region = new CellRangeAddress(0,3,sheetColumnCount * Count,sheetColumnCount * Count);
 					sheet.AddMergedRegion(region);
-					StringBuilder stringBuilder = new StringBuilder("计算公式：C = Ci×f×V1 / V\n");
-					stringBuilder.Append("式中：C——样品中目标物浓度\n");
-					stringBuilder.Append("Ci——目标物上机测定浓度\n");
-					stringBuilder.Append("V1——定容体积\n");
+					//要和公式那一块绑定在一起
+					StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
+					stringBuilder.Append("式中：C—样品中目标物的质量浓度,μg/L\n");
+					stringBuilder.Append("Ci——目标物上机测定浓度，ng\n");
+					if (FormulaComboBox.Text.Contains("V1"))
+					{
+						stringBuilder.Append("V1——定容体积( mL )\n");
+					}
 					stringBuilder.Append("f——稀释倍数\n");
-					stringBuilder.Append("V——取样量\n");
+					stringBuilder.Append("V——取样量( mL )\n");
 					formulacell.SetCellValue(stringBuilder.ToString());//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
+
 				}
 				//从第二列开始
 				for (int j = sheetColumnCount * Count + 1; j < sheetColumnCount * Count + sheetColumnCount; j++)
@@ -580,11 +573,24 @@ namespace WPFTest
 		{
 			//计算公式C = Ci×f×V1 / V
 			//稀释倍数
-			double f = double.Parse(dilutionratioTextBox.Text);
+			double f = double.NaN;
 			//定容体积
-			double V1 = double.Parse(constantvolumeTextBox.Text);
+			double V1 = double.NaN;
 			//取样量
-			double V = double.Parse(samplingquantityTextBox.Text);
+			double V = double.NaN;
+			if (Regex.IsMatch(dilutionratioTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				f = double.Parse(dilutionratioTextBox.Text);
+			}
+			if (Regex.IsMatch(constantvolumeTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				V1 = double.Parse(constantvolumeTextBox.Text);
+			}
+			if (Regex.IsMatch(samplingquantityTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				V = double.Parse(samplingquantityTextBox.Text);
+			}
+			
 			//目标物上机测定浓度
 			double Ci;
 			foreach (DataTable dataTable in compoundsDataSet.Tables)
@@ -605,7 +611,16 @@ namespace WPFTest
 								{
 									Ci = double.Parse(potency);
 									//公式计算
-									double C = Ci * f * V1 / V;
+									//先用写死的，然后之后学习反射
+									double C;
+									if (FormulaComboBox.Text.Contains("V1"))
+									{
+										C = Ci * f * V1 / V;
+									}
+									else
+									{
+										C = Ci * f / V;
+									}
 									if (C > double.Parse(modelC))
 									{
 										string realC = CalculateAccuracyC(compoundName,C.ToString());
@@ -618,6 +633,37 @@ namespace WPFTest
 				}
 			}
 			return "<" + modelC;
+		}
+
+		private void ComplierCode(string expression)
+		{
+			CSharpCodeProvider objCSharpCodePrivoder = new CSharpCodeProvider();
+
+			CompilerParameters objCompilerParameters = new CompilerParameters();
+
+			//添加需要引用的dll
+			objCompilerParameters.ReferencedAssemblies.Add("System.dll");
+			objCompilerParameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
+			//是否生成可执行文件
+			objCompilerParameters.GenerateExecutable = false;
+			//是否生成在内存中
+			objCompilerParameters.GenerateInMemory = true;
+
+			//编译代码
+			CompilerResults cr = objCSharpCodePrivoder.CompileAssemblyFromSource(objCompilerParameters,FormulaComboBox.Text);
+
+			if (cr.Errors.HasErrors)
+			{
+				var msg = string.Join(Environment.NewLine,cr.Errors.Cast<CompilerError>().Select(err => err.ErrorText));
+				MessageBox.Show(msg,"编译错误");
+			}
+			else
+			{
+				Assembly objAssembly = cr.CompiledAssembly;
+				object objHelloWorld = objAssembly.CreateInstance("Test");
+				MethodInfo objMI = objHelloWorld.GetType().GetMethod("Hello");
+				objMI.Invoke(objHelloWorld,null);
+			}
 		}
 
 		private string CalculateAccuracyC(string compoundName,string C)
@@ -829,5 +875,9 @@ namespace WPFTest
 		}
 		#endregion
 
+		private void importLess_Click(object sender,RoutedEventArgs e)
+		{
+
+		}
 	}
 }

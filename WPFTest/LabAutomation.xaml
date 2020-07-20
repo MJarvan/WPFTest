@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPFTest"
         mc:Ignorable="d"
-        Title="LabAutomation" Height="500" Width="800"
+        Title="LabAutomation" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Grid>
         <Grid.RowDefinitions>
@@ -18,11 +18,11 @@
             <StackPanel VerticalAlignment="Center">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="0.5*"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="0">
                         <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Content="委托单号："></Label>
@@ -75,10 +75,14 @@
                         </ComboBox>
 
                         <Label Content="公式：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
-                        <ComboBox VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="50" Name="FormulaComboBox">
+                        <ComboBox VerticalAlignment="Center" MinWidth="50" Name="FormulaComboBox">
                             <ComboBoxItem Content="C = Ci×f×V1 / V" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Content="C = Ci × f / V"></ComboBoxItem>
                         </ComboBox>
+                        <Label Content="系数：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <TextBox Name="coefficientTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                        <RadioButton Name="testZDRadoiButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
+                        <RadioButton Name="testJCRadoiButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
                     </StackPanel>
                     <Grid Grid.Row="1" Name="maingrid">
                         

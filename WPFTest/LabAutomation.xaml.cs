@@ -44,11 +44,14 @@ namespace WPFTest
 		/// 样品名称合计
 		/// </summary>
 		List<string> sampleNameList = new List<string>();
-
 		/// <summary>
 		/// 添加了平行样之后的合计
 		/// </summary>
-		List<KeyValuePair<List<string>,int>> newsampleNameList = new List<KeyValuePair<List<string>,int>>();
+		List<string> newsampleNameList = new List<string>();
+		/// <summary>
+		/// 添加了平行样之后的分样
+		/// </summary>
+		List<KeyValuePair<List<string>,List<int>>> finalsampleNameList = new List<KeyValuePair<List<string>,List<int>>>();
 
 		/// <summary>
 		/// 委托单号
@@ -156,10 +159,11 @@ namespace WPFTest
 			txtList.Clear();
 			compoundsNameList.Clear();
 			sampleNameList.Clear();
+			newsampleNameList.Clear();
 			ReportNo = string.Empty;
 			compoundsDataSet.Tables.Clear();
 			maingrid.Children.Clear();
-			newsampleNameList.Clear();
+			finalsampleNameList.Clear();
 		}
 
 		private bool CreateDataTable(TabControl tabControl,List<string> vs)
@@ -172,7 +176,7 @@ namespace WPFTest
 			//缺少自我填写的最低检测质量浓度
 			if (name.Length < 3)
 			{
-				MessageBox.Show(name[1] + "缺少最低检测质量浓度，请补充填写！");
+				MessageBox.Show(name[1] + "缺少最低检测质量浓度或检出限，请补充填写！");
 				return false;
 			}
 			KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(name[1],name[2]);
@@ -192,28 +196,36 @@ namespace WPFTest
 				dr.ItemArray = vs[j].Split("\t");
 				datatable.Rows.Add(dr);
 			}
-			//提取委托单号,删除后缀.gcd
-			for (int k = 0; k < datatable.Rows.Count; k++)
+			//提取委托单号,删除后缀.gcd以及BQ的行
+			for (int k = datatable.Rows.Count - 1; k >= 0; k--)
 			{
 				string oldname = datatable.Rows[k]["数据文件名"].ToString();
-				//切割名字需要优化
-				string[] newname = oldname.Replace(".gcd","").Split(" ");
-
-				if (sampleNameList.Count != datatable.Rows.Count)
+				//
+				if (oldname.Contains("BQ"))
 				{
-					if (newname.Length > 1)
+					datatable.Rows[k].Delete();
+				}
+				else
+				{
+					string[] newname = oldname.Replace(".gcd","").Split(" ");
+
+					if (sampleNameList.Count != datatable.Rows.Count)
 					{
-						ReportNo = newname[0];
-						sampleNameList.Add(newname[1]);
-						datatable.Rows[k]["数据文件名"] = newname[1];
-					}
-					else
-					{
-						datatable.Rows[k]["数据文件名"] = newname[0];
-						sampleNameList.Add(newname[0]);
+						if (newname.Length > 1)
+						{
+							ReportNo = newname[0];
+							sampleNameList.Add(newname[1]);
+							datatable.Rows[k]["数据文件名"] = newname[1];
+						}
+						else
+						{
+							datatable.Rows[k]["数据文件名"] = newname[0];
+							sampleNameList.Add(newname[0]);
+						}
 					}
 				}
 			}
+			datatable.AcceptChanges();
 			//根据有机组要求只要三列
 			DataTable newdatatable = new DataTable();
 			newdatatable.TableName = datatable.TableName;
@@ -282,21 +294,27 @@ namespace WPFTest
 				}
 			}
 
+			newsampleNameList = psNameList.ToList();
+
 			int Count = psNameList.Count % importTakeNum > 0 ? psNameList.Count / importTakeNum + 1 : psNameList.Count / importTakeNum;
 
 			for (int i = 0; i < Count; i++)
 			{
-				int num = -1;
+				List<int> finalnumList = new List<int>();
 				if (i == Count - 1)
 				{
 					//如果这里8个里面同时有两个平均怎么办，目前只能手动处理
 					List<string> cellList = psNameList.ToList();
 					if (cellList.Exists(x => x.Contains(Cbanlance)))
 					{
-						num = cellList.IndexOf(cellList.Where(x => x.Contains(Cbanlance)).FirstOrDefault());
+						List<string> newcellList = cellList.Where(x => x.Contains(Cbanlance)).ToList();
+						foreach (string strNum in newcellList)
+						{
+							finalnumList.Add(cellList.IndexOf(strNum));
+						}
 					}
-					KeyValuePair<List<string>,int> keyValuePair = new KeyValuePair<List<string>,int>(cellList,num);
-					newsampleNameList.Add(keyValuePair);
+					KeyValuePair<List<string>,List<int>> keyValuePair = new KeyValuePair<List<string>,List<int>>(cellList,finalnumList);
+					finalsampleNameList.Add(keyValuePair);
 				}
 				else
 				{
@@ -304,10 +322,14 @@ namespace WPFTest
 					psNameList.RemoveRange(0,importTakeNum);
 					if (cellList.Exists(x => x.Contains(Cbanlance)))
 					{
-						num = cellList.IndexOf(cellList.Where(x => x.Contains(Cbanlance)).FirstOrDefault());
+						List<string> newcellList = cellList.Where(x => x.Contains(Cbanlance)).ToList();
+						foreach (string strNum in newcellList)
+						{
+							finalnumList.Add(cellList.IndexOf(strNum));
+						}
 					}
-					KeyValuePair<List<string>,int> keyValuePair = new KeyValuePair<List<string>,int>(cellList,num);
-					newsampleNameList.Add(keyValuePair);
+					KeyValuePair<List<string>,List<int>> keyValuePair = new KeyValuePair<List<string>,List<int>>(cellList,finalnumList);
+					finalsampleNameList.Add(keyValuePair);
 				}
 			}
 		}
@@ -320,7 +342,7 @@ namespace WPFTest
 		/// <param name="e"></param>
 		private void importAll_Click(object sender,RoutedEventArgs e)
 		{
-			if (newsampleNameList.Count == 0)
+			if (finalsampleNameList.Count == 0)
 			{
 				return;
 			}
@@ -331,7 +353,7 @@ namespace WPFTest
 			HSSFCellStyle cellStyle = CreateStyle(workbook);
 
 			int Count = 0;
-			foreach (KeyValuePair<List<string>,int> keyValuePair in newsampleNameList)
+			foreach (KeyValuePair<List<string>,List<int>> keyValuePair in finalsampleNameList)
 			{
 				CreateSheet(sheet,cellStyle,keyValuePair.Key,keyValuePair.Value,Count);
 				Count++;
@@ -400,7 +422,7 @@ namespace WPFTest
 			}
 		}
 
-		private void CreateSheet(ISheet sheet,HSSFCellStyle cellStyle,List<string> cellList,int advantageNum,int Count)
+		private void CreateSheet(ISheet sheet,HSSFCellStyle cellStyle,List<string> cellList,List<int> advantageNum,int Count)
 		{
 			//前四行
 			for (int i = 0; i < 4; i++)
@@ -445,39 +467,81 @@ namespace WPFTest
 					}
 					else if (i == (int)samplingquantityLabel.Tag)
 					{
-						if ((j - sheetColumnCount * Count) - 2 == advantageNum && advantageNum >= 0)
+						if (advantageNum.Count > 0)
 						{
-							cell.SetCellValue("-");
-							continue;
+							foreach (int num in advantageNum)
+							{
+								if (j - sheetColumnCount * Count - 2 == num)
+								{
+									cell.SetCellValue("-");
+									break;
+								}
+								else
+								{
+									string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									cell.SetCellValue(setvalue);
+								}
+							}
 						}
-						string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
-						cell.SetCellValue(setvalue);
+						else
+						{
+							string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							cell.SetCellValue(setvalue);
+						}
 					}
 					else if (i == (int)constantvolumeLabel.Tag)
 					{
-						if ((j - sheetColumnCount * Count) - 2 == advantageNum && advantageNum >= 0)
+						if (advantageNum.Count > 0)
 						{
-							cell.SetCellValue("-");
-							continue;
+							foreach (int num in advantageNum)
+							{
+								if (j - sheetColumnCount * Count - 2 == num)
+								{
+									cell.SetCellValue("-");
+									break;
+								}
+								else
+								{
+									string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									cell.SetCellValue(setvalue);
+								}
+							}
 						}
-						string setvalue = ((j - sheetColumnCount * Count) == 1) ? constantvolumeLabel.Content.ToString() : constantvolumeTextBox.Text;
-						cell.SetCellValue(setvalue);
+						else
+						{
+							string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							cell.SetCellValue(setvalue);
+						}
 					}
 					else if (i == (int)dilutionratioLabel.Tag)
 					{
-						if ((j - sheetColumnCount * Count) - 2 == advantageNum && advantageNum >= 0)
+						if (advantageNum.Count > 0)
 						{
-							cell.SetCellValue("-");
-							continue;
+							foreach (int num in advantageNum)
+							{
+								if (j - sheetColumnCount * Count - 2 == num)
+								{
+									cell.SetCellValue("-");
+									break;
+								}
+								else
+								{
+									string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									cell.SetCellValue(setvalue);
+								}
+							}
 						}
-						string setvalue = ((j - sheetColumnCount * Count) == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
-						cell.SetCellValue(setvalue);
+						else
+						{
+							string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							cell.SetCellValue(setvalue);
+						}
 					}
 					else if ((j - sheetColumnCount * Count) == 1)
 					{
 						cell.SetCellValue("样品编号");
 					}
-					else if((j - sheetColumnCount * Count) - 2 < cellList.Count)
+					else if ((j - sheetColumnCount * Count) - 2 < cellList.Count)
 					{
 						cell.SetCellValue(cellList[(j - sheetColumnCount * Count) - 2]);
 					}
@@ -501,7 +565,14 @@ namespace WPFTest
 				}
 				else if (k == 1 + sheetColumnCount * Count)
 				{
-					cell.SetCellValue("最低检测质量浓度(mg/L)");
+					if (testZDRadoiButton.IsChecked == true)
+					{
+						cell.SetCellValue(testZDRadoiButton.Content + "(mg/L)");
+					}
+					else if (testJCRadoiButton.IsChecked == true)
+					{
+						cell.SetCellValue(testJCRadoiButton.Content + "(mg/L)");
+					}
 				}
 				else if (k == 2 + sheetColumnCount * Count)
 				{
@@ -542,8 +613,19 @@ namespace WPFTest
 							else
 							{
 								string sampleName = cellList[l - sheetColumnCount * Count - 2];
-								string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
-								compoundsCell.SetCellValue(setvalue);
+								if (sampleName.Contains("平均"))
+								{
+									//获取平均样的位置
+									int num = newsampleNameList.IndexOf(sampleName);
+									//平均样的前两个加起来除以二就是平均值
+									string setvalue = CompareCompoundWithFormula(compoundName,modelC,newsampleNameList[num - 1],newsampleNameList[num - 2]);
+									compoundsCell.SetCellValue(setvalue);
+								}
+								else
+								{
+									string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
+									compoundsCell.SetCellValue(setvalue);
+								}
 							}
 						}
 					}
@@ -551,33 +633,17 @@ namespace WPFTest
 			}
 		}
 
-		private HSSFCellStyle CreateStyle(HSSFWorkbook workbook)
+		private string CompareCompoundWithFormula(string compoundName,string modelC,string sampleName1,string sampleName2)
 		{
-			HSSFCellStyle cellStyle = (HSSFCellStyle)workbook.CreateCellStyle(); //创建列头单元格实例样式
-			cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center; //水平居中
-			cellStyle.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center; //垂直居中
-			cellStyle.WrapText = true;//自动换行
-			cellStyle.BorderBottom = BorderStyle.Thin;
-			cellStyle.BorderRight = BorderStyle.Thin;
-			cellStyle.BorderTop = BorderStyle.Thin;
-			cellStyle.BorderLeft = BorderStyle.Thin;
-			cellStyle.TopBorderColor = HSSFColor.Black.Index;//DarkGreen(黑绿色)
-			cellStyle.RightBorderColor = HSSFColor.Black.Index;
-			cellStyle.BottomBorderColor = HSSFColor.Black.Index;
-			cellStyle.LeftBorderColor = HSSFColor.Black.Index;
-
-			return cellStyle;
-		}
-
-		private string CompareCompoundWithFormula(string compoundName,string modelC,string sampleName)
-		{
-			//计算公式C = Ci×f×V1 / V
+			//计算公式C = Ci×f×V1 / V * k
 			//稀释倍数
 			double f = double.NaN;
 			//定容体积
 			double V1 = double.NaN;
 			//取样量
 			double V = double.NaN;
+			//系数k
+			double k = double.NaN;
 			if (Regex.IsMatch(dilutionratioTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
 			{
 				f = double.Parse(dilutionratioTextBox.Text);
@@ -590,7 +656,108 @@ namespace WPFTest
 			{
 				V = double.Parse(samplingquantityTextBox.Text);
 			}
-			
+			if (Regex.IsMatch(coefficientTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				k = double.Parse(coefficientTextBox.Text);
+			}
+			//目标物上机测定浓度
+			double Ci;
+			double C1 = double.NaN;
+			double C2 = double.NaN;
+			foreach (DataTable dataTable in compoundsDataSet.Tables)
+			{
+				//找到该化合物对应的datatable
+				if (dataTable.TableName == compoundName)
+				{
+					for (int i = 0; i < dataTable.Rows.Count; i++)
+					{
+						for (int j = 0; j < dataTable.Columns.Count; j++)
+						{
+							//找到该化合物对应的样品编号和浓度数据
+							string dtsampleName = dataTable.Rows[i][j].ToString();
+
+							if (dtsampleName == sampleName1)
+							{
+								string potency = dataTable.Rows[i]["浓度"].ToString();
+								if (!potency.Contains("-"))
+								{
+									Ci = double.Parse(potency);
+									//公式计算
+									//先用写死的，然后之后学习反射
+									if (FormulaComboBox.Text.Contains("V1"))
+									{
+										C1 = Ci * f * V1 / V * k;
+									}
+									else
+									{
+										C1 = Ci * f / V * k;
+									}
+									
+								}
+							}
+							if (dtsampleName == sampleName2)
+							{
+								string potency = dataTable.Rows[i]["浓度"].ToString();
+								if (!potency.Contains("-"))
+								{
+									Ci = double.Parse(potency);
+									//公式计算
+									//先用写死的，然后之后学习反射
+									if (FormulaComboBox.Text.Contains("V1"))
+									{
+										C2 = Ci * f * V1 / V * k;
+									}
+									else
+									{
+										C2 = Ci * f / V * k;
+									}
+
+								}
+							}
+						}
+					}
+				}
+			}
+
+			double C = (C1 + C2) / 2;
+			if (C > double.Parse(modelC))
+			{
+				string realC = CalculateAccuracyC(compoundName,C.ToString());
+				return realC;
+			}
+			return "<" + modelC;
+		}
+
+
+
+		private string CompareCompoundWithFormula(string compoundName,string modelC,string sampleName)
+		{
+			//计算公式C = Ci×f×V1 / V * k
+			//稀释倍数
+			double f = double.NaN;
+			//定容体积
+			double V1 = double.NaN;
+			//取样量
+			double V = double.NaN;
+			//系数k
+			double k = double.NaN;
+			if (Regex.IsMatch(dilutionratioTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				f = double.Parse(dilutionratioTextBox.Text);
+			}
+			if (Regex.IsMatch(constantvolumeTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				V1 = double.Parse(constantvolumeTextBox.Text);
+			}
+			if (Regex.IsMatch(samplingquantityTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				V = double.Parse(samplingquantityTextBox.Text);
+			}
+			if (Regex.IsMatch(coefficientTextBox.Text,"^([0-9]{1,}[.][0-9]*)$"))
+			{
+				k = double.Parse(coefficientTextBox.Text);
+			}
+
 			//目标物上机测定浓度
 			double Ci;
 			foreach (DataTable dataTable in compoundsDataSet.Tables)
@@ -615,11 +782,11 @@ namespace WPFTest
 									double C;
 									if (FormulaComboBox.Text.Contains("V1"))
 									{
-										C = Ci * f * V1 / V;
+										C = Ci * f * V1 / V * k;
 									}
 									else
 									{
-										C = Ci * f / V;
+										C = Ci * f / V * k;
 									}
 									if (C > double.Parse(modelC))
 									{
@@ -635,6 +802,23 @@ namespace WPFTest
 			return "<" + modelC;
 		}
 
+		private HSSFCellStyle CreateStyle(HSSFWorkbook workbook)
+		{
+			HSSFCellStyle cellStyle = (HSSFCellStyle)workbook.CreateCellStyle(); //创建列头单元格实例样式
+			cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center; //水平居中
+			cellStyle.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center; //垂直居中
+			cellStyle.WrapText = true;//自动换行
+			cellStyle.BorderBottom = BorderStyle.Thin;
+			cellStyle.BorderRight = BorderStyle.Thin;
+			cellStyle.BorderTop = BorderStyle.Thin;
+			cellStyle.BorderLeft = BorderStyle.Thin;
+			cellStyle.TopBorderColor = HSSFColor.Black.Index;//DarkGreen(黑绿色)
+			cellStyle.RightBorderColor = HSSFColor.Black.Index;
+			cellStyle.BottomBorderColor = HSSFColor.Black.Index;
+			cellStyle.LeftBorderColor = HSSFColor.Black.Index;
+
+			return cellStyle;
+		}
 		private void ComplierCode(string expression)
 		{
 			CSharpCodeProvider objCSharpCodePrivoder = new CSharpCodeProvider();

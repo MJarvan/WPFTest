@@ -60,8 +60,10 @@ namespace WPFTest
 
 		//调整一个表格的样品总列数
 		int importTakeNum = 8;
-		//调整一个表格的总列数
-		int sheetColumnCount = 10;
+		//调整一个横表格的总列数
+		int verticalSheetColumnCount = 10;
+		//调整一个竖表格的总列数
+		int horizontalSheetColumnCount = 8;
 		/// <summary>
 		/// 每个化合物的datatable
 		/// </summary>
@@ -144,8 +146,11 @@ namespace WPFTest
 					}
 				}
 				AddParallelSamplesToList();
-				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
-				compoundsNameList.Add(keyValuePair);
+				if (compoundsNameList.Count > 4)
+				{
+					KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
+					compoundsNameList.Add(keyValuePair);
+				}
 				maingrid.Children.Add(tabControl);
 				ReportNoLabel.Content = ReportNo;
 			}
@@ -213,7 +218,7 @@ namespace WPFTest
 					{
 						if (newname.Length > 1)
 						{
-							ReportNo = newname[0];
+							ReportNo = (ReportNo == string.Empty) ? newname[0] : ReportNo;
 							sampleNameList.Add(newname[1]);
 							datatable.Rows[k]["数据文件名"] = newname[1];
 						}
@@ -303,7 +308,6 @@ namespace WPFTest
 				List<int> finalnumList = new List<int>();
 				if (i == Count - 1)
 				{
-					//如果这里8个里面同时有两个平均怎么办，目前只能手动处理
 					List<string> cellList = psNameList.ToList();
 					if (cellList.Exists(x => x.Contains(Cbanlance)))
 					{
@@ -342,10 +346,266 @@ namespace WPFTest
 		/// <param name="e"></param>
 		private void importAll_Click(object sender,RoutedEventArgs e)
 		{
-			if (finalsampleNameList.Count == 0)
+			if (finalsampleNameList.Count == 0 || newsampleNameList.Count == 0)
 			{
 				return;
 			}
+			//判断化合物是否大于4，从而分割成横表或者竖表
+			if (compoundsNameList.Count > 4)
+			{
+				CreateVerticalExcel();
+			}
+			else
+			{
+				CreateHorizontalExcel();
+			}
+
+		}
+
+		/// <summary>
+		/// 创建竖表Excel
+		/// </summary>
+		private void CreateHorizontalExcel()
+		{
+			var workbook = new HSSFWorkbook();
+			var sheet = workbook.CreateSheet("色谱分析结果汇总1-水");
+			sheet.ForceFormulaRecalculation = true;
+			//设置顶部大标题样式
+			HSSFCellStyle cellStyle = CreateStyle(workbook);
+			HSSFCellStyle bordercellStyle = CreateStyle(workbook);
+			bordercellStyle.BorderLeft = BorderStyle.Thin;
+			bordercellStyle.BorderTop = BorderStyle.Thin;
+			bordercellStyle.BorderLeft = BorderStyle.Thin;
+			bordercellStyle.BorderRight = BorderStyle.Thin;
+			//int Count = 0;
+			//前九行 大表头
+			for (int i = 0; i < 9; i++)
+			{
+				//第一行最右显示委托单号
+				HSSFRow row = (HSSFRow)sheet.CreateRow(i); //创建行或者获取行
+				row.HeightInPoints = 20;
+				switch (i)
+				{
+					case 0:
+						{
+							var reportCell = row.CreateCell(horizontalSheetColumnCount - 2);
+							reportCell.CellStyle = cellStyle;
+							reportCell.SetCellValue("委托单号：" + ReportNo);
+							CellRangeAddress region = new CellRangeAddress(i,i,horizontalSheetColumnCount - 2,horizontalSheetColumnCount - 1);
+							sheet.AddMergedRegion(region);
+							break;
+						}
+					case 1:
+						{
+							row.HeightInPoints = 30;
+							var nameCell = row.CreateCell(0);
+							var cellStyleFont = (HSSFFont)workbook.CreateFont(); //创建字体
+							//假如字体大小只需要是粗体的话直接使用下面该属性即可
+							cellStyleFont.IsBold = true; //字体加粗
+							cellStyleFont.FontHeightInPoints = 20; //字体大小
+							HSSFCellStyle newcellStyle = CreateStyle(workbook);
+							newcellStyle.SetFont(cellStyleFont); //将字体绑定到样式
+							nameCell.CellStyle = newcellStyle;
+							nameCell.SetCellValue("色谱分析结果汇总表");
+							CellRangeAddress region = new CellRangeAddress(i,i,0,horizontalSheetColumnCount - 1);
+							sheet.AddMergedRegion(region);
+							break;
+						}
+					case 2:
+						{
+							var samplekindCell = row.CreateCell(0);
+							samplekindCell.CellStyle = cellStyle;
+							samplekindCell.SetCellValue("样品类别：");
+							int a = samplekindCell.RowIndex;
+							CellRangeAddress firstregion = new CellRangeAddress(i,i,1,2);
+							sheet.AddMergedRegion(firstregion);
+							var instrumentnumberCell = row.CreateCell(3);
+							instrumentnumberCell.CellStyle = cellStyle;
+							instrumentnumberCell.SetCellValue("仪器编号：");
+							var analysisdateCell = row.CreateCell(5);
+							analysisdateCell.CellStyle = cellStyle;
+							analysisdateCell.SetCellValue("分析日期：");
+							CellRangeAddress secondregion = new CellRangeAddress(i,i,horizontalSheetColumnCount - 2,horizontalSheetColumnCount - 1);
+							sheet.AddMergedRegion(secondregion);
+							break;
+						}
+					case 3:
+						{
+							var instrumentkindCell = row.CreateCell(0);
+							instrumentkindCell.CellStyle = cellStyle;
+							instrumentkindCell.SetCellValue("仪器型号：");
+							CellRangeAddress firstregion = new CellRangeAddress(i,i,1,4);
+							sheet.AddMergedRegion(firstregion);
+							var chromatographiccolumnCell = row.CreateCell(5);
+							chromatographiccolumnCell.CellStyle = cellStyle;
+							chromatographiccolumnCell.SetCellValue("色谱柱：");
+							CellRangeAddress secondregion = new CellRangeAddress(i,i,horizontalSheetColumnCount - 2,horizontalSheetColumnCount - 1);
+							sheet.AddMergedRegion(secondregion);
+							break;
+						}
+					case 4:
+						{
+							var methodbasisCell = row.CreateCell(0);
+							methodbasisCell.CellStyle = cellStyle;
+							methodbasisCell.SetCellValue("方法依据：");
+							CellRangeAddress firstregion = new CellRangeAddress(i,i,1,4);
+							sheet.AddMergedRegion(firstregion);
+							var chromatographiccolumnCell = row.CreateCell(5);
+							chromatographiccolumnCell.CellStyle = cellStyle;
+							chromatographiccolumnCell.SetCellValue("计算公式：");
+							var formulacell = row.CreateCell(horizontalSheetColumnCount - 2);
+							formulacell.CellStyle = cellStyle;
+							CellRangeAddress region = new CellRangeAddress(i,8,horizontalSheetColumnCount - 2,horizontalSheetColumnCount - 1);
+							sheet.AddMergedRegion(region);
+							//要和公式那一块绑定在一起
+							StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
+							if (FormulaComboBox.Text.Contains("X"))
+							{
+								stringBuilder.Append("X—水样TPH的质量浓度,mg/L；\n");
+							}
+							else
+							{
+								stringBuilder.Append("C—样品中目标物的质量浓度,μg/L\n");
+							}
+							stringBuilder.Append("Ci——目标物上机测定浓度，ng\n");
+							if (FormulaComboBox.Text.Contains("V1"))
+							{
+								stringBuilder.Append("V1——定容体积( mL )\n");
+							}
+							stringBuilder.Append("f——稀释倍数\n");
+							stringBuilder.Append("V——取样量( mL )\n");
+							formulacell.SetCellValue(stringBuilder.ToString());
+							break;
+						}
+					case 5:
+						{
+							var marknumberCell = row.CreateCell(0);
+							marknumberCell.CellStyle = cellStyle;
+							marknumberCell.SetCellValue("标曲编号：");
+							CellRangeAddress firstregion = new CellRangeAddress(i,i,1,4);
+							sheet.AddMergedRegion(firstregion);
+							break;
+						}
+					case 6:
+						{
+							var analyticalconditionsCell = row.CreateCell(0);
+							analyticalconditionsCell.CellStyle = cellStyle;
+							analyticalconditionsCell.SetCellValue("分析条件：");
+							CellRangeAddress firstregion = new CellRangeAddress(i,i + 2,1,4);
+							sheet.AddMergedRegion(firstregion);
+							break;
+						}
+					default:
+						{
+							break;
+						}
+				}
+			}
+
+			int Count = 4;
+			//正规格式第一行表头
+			for (int i = 9; i < 14; i++)
+			{
+				HSSFRow formalrow = (HSSFRow)sheet.CreateRow(i); //创建行或者获取行
+				formalrow.HeightInPoints = 20;
+				for (int j = 0; j < horizontalSheetColumnCount; j++)
+				{
+					var cell = formalrow.CreateCell(j);
+					cell.CellStyle = bordercellStyle;
+					if (i == 9)
+					{
+						if (j < Count)
+						{
+							CellRangeAddress region = new CellRangeAddress(9,13,j,j);
+							sheet.AddMergedRegion(region);
+						}
+						switch (j)
+						{
+							case 0:
+								{
+									cell.SetCellValue("样品编号");
+									break;
+								}
+							case 1:
+								{
+									cell.SetCellValue("水样体积 V(L)");
+									break;
+								}
+							case 2:
+								{
+									cell.SetCellValue("稀释倍数f");
+									break;
+								}
+							case 3:
+								{
+									cell.SetCellValue("试样体积 V1(mL)");
+									break;
+								}
+							case 4:
+								{
+									CellRangeAddress region = new CellRangeAddress(9,9,j,horizontalSheetColumnCount - 1);
+									sheet.AddMergedRegion(region);
+									cell.SetCellValue("目标化合物");
+									break;
+								}
+							default:
+								{
+									cell.SetCellValue(string.Empty);
+									break;
+								}
+						}
+					}
+					else if (i == 11 && j == 4)
+					{
+						cell.SetCellValue("检出限(mg/L)");
+						CellRangeAddress outregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
+						sheet.AddMergedRegion(outregion);
+					}
+					else if (i == 13 && j == 4)
+					{
+						cell.SetCellValue("目标化合物浓度(mg/L)");
+						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
+						sheet.AddMergedRegion(targetregion);
+					}
+					else
+					{
+						cell.SetCellValue(string.Empty);
+					}
+				}
+			}
+
+			foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
+			{
+				CreateHorizontalSheet(sheet,bordercellStyle,keyValuePair.Key,keyValuePair.Value,Count);
+				Count++;
+			}
+
+			//自动调整列距
+			for (int i = 0; i < horizontalSheetColumnCount; i++)
+			{
+				if (i == horizontalSheetColumnCount - 1)
+				{
+					sheet.SetColumnWidth(i,20 * 256);
+				}
+				else
+				{
+					sheet.AutoSizeColumn(i);
+				}
+				int width = sheet.GetColumnWidth(i);
+				if (width < 10 * 256)
+				{
+					sheet.SetColumnWidth(i,10 * 256);
+				}
+			}
+
+			ExportToExcel(workbook);
+		}
+
+		/// <summary>
+		/// 创建横表Excel
+		/// </summary>
+		private void CreateVerticalExcel()
+		{
 			var workbook = new HSSFWorkbook();
 			var sheet = workbook.CreateSheet("色谱分析结果汇总1-水");
 			sheet.ForceFormulaRecalculation = true;
@@ -355,14 +615,14 @@ namespace WPFTest
 			int Count = 0;
 			foreach (KeyValuePair<List<string>,List<int>> keyValuePair in finalsampleNameList)
 			{
-				CreateSheet(sheet,cellStyle,keyValuePair.Key,keyValuePair.Value,Count);
+				CreateVerticalSheet(sheet,cellStyle,keyValuePair.Key,keyValuePair.Value,Count);
 				Count++;
 			}
 
 			//自动调整列距
-			for (int i = 0; i < sheetColumnCount * Count; i++)
+			for (int i = 0; i < verticalSheetColumnCount * Count; i++)
 			{
-				if (i % sheetColumnCount == 0)
+				if (i % verticalSheetColumnCount == 0)
 				{
 					sheet.SetColumnWidth(i,40 * 256);
 				}
@@ -375,6 +635,10 @@ namespace WPFTest
 			ExportToExcel(workbook);
 		}
 
+		/// <summary>
+		/// 导出到Excel
+		/// </summary>
+		/// <param name="workbook"></param>
 		private void ExportToExcel(HSSFWorkbook workbook)
 		{
 			//自己选位置
@@ -422,8 +686,73 @@ namespace WPFTest
 			}
 		}
 
-		private void CreateSheet(ISheet sheet,HSSFCellStyle cellStyle,List<string> cellList,List<int> advantageNum,int Count)
+
+		private void CreateHorizontalSheet(ISheet sheet,HSSFCellStyle cellStyle,string compoundName,string modelC,int Count)
 		{
+			HSSFRow samplerow = (HSSFRow)sheet.GetRow(10);
+			HSSFRow limitrow = (HSSFRow)sheet.GetRow(12);
+			var sampleCell = samplerow.GetCell(Count);
+			sampleCell.SetCellValue(compoundName);//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
+			var limitCell = limitrow.GetCell(Count);
+			limitCell.SetCellValue(modelC);//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
+
+			for (int k = 0; k < newsampleNameList.Count; k++)
+			{
+				string sampleName = newsampleNameList[k];
+				HSSFRow row = (HSSFRow)sheet.CreateRow(sheet.PhysicalNumberOfRows);
+				row.HeightInPoints = 20;
+				//还是把每个cell弄出来慢慢做
+				for (int i = 0; i < Count + 1; i++)
+				{
+					var cell = row.CreateCell(i);
+					cell.CellStyle = cellStyle;
+
+					//赋值
+					if (i == Count)
+					{
+						string value = CompareCompoundWithFormula(compoundName,modelC,sampleName);
+						cell.SetCellValue(value);
+					}
+					else
+					{
+						switch (i)
+						{
+							case 0:
+								{
+									cell.SetCellValue(sampleName);
+									break;
+								}
+							case 1:
+								{
+									cell.SetCellValue(samplingquantityTextBox.Text);
+									break;
+								}
+							case 2:
+								{
+									cell.SetCellValue(dilutionratioTextBox.Text);
+									break;
+								}
+							case 3:
+								{
+									cell.SetCellValue(constantvolumeTextBox.Text);
+									break;
+								}
+							default:
+								{
+									break;
+								}
+						}
+					}
+				}
+			}
+		}
+
+		private void CreateVerticalSheet(ISheet sheet,HSSFCellStyle cellStyle,List<string> cellList,List<int> advantageNum,int Count)
+		{
+			cellStyle.BorderBottom = BorderStyle.Thin;
+			cellStyle.BorderRight = BorderStyle.Thin;
+			cellStyle.BorderTop = BorderStyle.Thin;
+			cellStyle.BorderLeft = BorderStyle.Thin;
 			//前四行
 			for (int i = 0; i < 4; i++)
 			{
@@ -435,11 +764,11 @@ namespace WPFTest
 				{
 					row.HeightInPoints = 50;
 				}
-				var formulacell = (Count == 0) ? row.CreateCell(i) : row.CreateCell(sheetColumnCount * Count);
+				var formulacell = (Count == 0) ? row.CreateCell(i) : row.CreateCell(verticalSheetColumnCount * Count);
 				formulacell.CellStyle = cellStyle;
 				if (i == 0)
 				{
-					CellRangeAddress region = new CellRangeAddress(0,3,sheetColumnCount * Count,sheetColumnCount * Count);
+					CellRangeAddress region = new CellRangeAddress(0,3,verticalSheetColumnCount * Count,verticalSheetColumnCount * Count);
 					sheet.AddMergedRegion(region);
 					//要和公式那一块绑定在一起
 					StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
@@ -455,12 +784,12 @@ namespace WPFTest
 
 				}
 				//从第二列开始
-				for (int j = sheetColumnCount * Count + 1; j < sheetColumnCount * Count + sheetColumnCount; j++)
+				for (int j = verticalSheetColumnCount * Count + 1; j < verticalSheetColumnCount * Count + verticalSheetColumnCount; j++)
 				{
 					var cell = row.CreateCell(j);
 					cell.CellStyle = cellStyle;
 					//按照已有的弄
-					if ((j - sheetColumnCount * Count) - 2 >= cellList.Count)
+					if ((j - verticalSheetColumnCount * Count) - 2 >= cellList.Count)
 					{
 						string setvalue = (i == 0) ? "以下空白" : "";
 						cell.SetCellValue(setvalue);
@@ -471,21 +800,21 @@ namespace WPFTest
 						{
 							foreach (int num in advantageNum)
 							{
-								if (j - sheetColumnCount * Count - 2 == num)
+								if (j - verticalSheetColumnCount * Count - 2 == num)
 								{
 									cell.SetCellValue("-");
 									break;
 								}
 								else
 								{
-									string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 									cell.SetCellValue(setvalue);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 							cell.SetCellValue(setvalue);
 						}
 					}
@@ -495,21 +824,21 @@ namespace WPFTest
 						{
 							foreach (int num in advantageNum)
 							{
-								if (j - sheetColumnCount * Count - 2 == num)
+								if (j - verticalSheetColumnCount * Count - 2 == num)
 								{
 									cell.SetCellValue("-");
 									break;
 								}
 								else
 								{
-									string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 									cell.SetCellValue(setvalue);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 							cell.SetCellValue(setvalue);
 						}
 					}
@@ -519,51 +848,51 @@ namespace WPFTest
 						{
 							foreach (int num in advantageNum)
 							{
-								if (j - sheetColumnCount * Count - 2 == num)
+								if (j - verticalSheetColumnCount * Count - 2 == num)
 								{
 									cell.SetCellValue("-");
 									break;
 								}
 								else
 								{
-									string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 									cell.SetCellValue(setvalue);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - sheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
 							cell.SetCellValue(setvalue);
 						}
 					}
-					else if ((j - sheetColumnCount * Count) == 1)
+					else if ((j - verticalSheetColumnCount * Count) == 1)
 					{
 						cell.SetCellValue("样品编号");
 					}
-					else if ((j - sheetColumnCount * Count) - 2 < cellList.Count)
+					else if ((j - verticalSheetColumnCount * Count) - 2 < cellList.Count)
 					{
-						cell.SetCellValue(cellList[(j - sheetColumnCount * Count) - 2]);
+						cell.SetCellValue(cellList[(j - verticalSheetColumnCount * Count) - 2]);
 					}
 				}
 			}
 			//第四行表头
 			HSSFRow HearderRow = (Count == 0) ? (HSSFRow)sheet.CreateRow(4) : (HSSFRow)sheet.GetRow(4); //创建行或者获取行
 			HearderRow.HeightInPoints = 20;
-			for (int k = sheetColumnCount * Count; k < sheetColumnCount * (Count + 1); k++)
+			for (int k = verticalSheetColumnCount * Count; k < verticalSheetColumnCount * (Count + 1); k++)
 			{
 				var cell = HearderRow.CreateCell(k);
 				cell.CellStyle = cellStyle;
-				if (!sheet.MergedRegions.Exists(x => x.FirstRow == 4 && x.LastRow == 4 && x.FirstColumn == 2 + sheetColumnCount * Count && x.LastColumn == 9 + sheetColumnCount * Count))
+				if (!sheet.MergedRegions.Exists(x => x.FirstRow == 4 && x.LastRow == 4 && x.FirstColumn == 2 + verticalSheetColumnCount * Count && x.LastColumn == 9 + verticalSheetColumnCount * Count))
 				{
-					CellRangeAddress newregion = new CellRangeAddress(4,4,2 + sheetColumnCount * Count,9 + sheetColumnCount * Count);
+					CellRangeAddress newregion = new CellRangeAddress(4,4,2 + verticalSheetColumnCount * Count,9 + verticalSheetColumnCount * Count);
 					sheet.AddMergedRegion(newregion);
 				}
-				if (k == 0 + sheetColumnCount * Count)
+				if (k == 0 + verticalSheetColumnCount * Count)
 				{
 					cell.SetCellValue("目标化合物");//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
 				}
-				else if (k == 1 + sheetColumnCount * Count)
+				else if (k == 1 + verticalSheetColumnCount * Count)
 				{
 					if (testZDRadoiButton.IsChecked == true)
 					{
@@ -574,7 +903,7 @@ namespace WPFTest
 						cell.SetCellValue(testJCRadoiButton.Content + "(mg/L)");
 					}
 				}
-				else if (k == 2 + sheetColumnCount * Count)
+				else if (k == 2 + verticalSheetColumnCount * Count)
 				{
 					cell.SetCellValue("目标化合物浓度 C (mg/L)");
 				}
@@ -589,22 +918,22 @@ namespace WPFTest
 				//headerCell.SetCellValue(compoundName);
 				//headerCell.CellStyle = cellStyle;
 				string modelC = compoundsNameList[k].Value;
-				for (int l = sheetColumnCount * Count; l < sheetColumnCount * Count + sheetColumnCount; l++)
+				for (int l = verticalSheetColumnCount * Count; l < verticalSheetColumnCount * Count + verticalSheetColumnCount; l++)
 				{
 					var compoundsCell = compoundsRow.CreateCell(l);
 					compoundsCell.CellStyle = cellStyle;
 					{
 						//第一列是化合物名称
-						if (l - sheetColumnCount * Count == 0)
+						if (l - verticalSheetColumnCount * Count == 0)
 						{
 							compoundsCell.SetCellValue(compoundName);
 						}
 						//第二列是判断标准
-						else if (l - sheetColumnCount * Count == 1)
+						else if (l - verticalSheetColumnCount * Count == 1)
 						{
 							compoundsCell.SetCellValue(modelC);
 						}
-						else if (l - sheetColumnCount * Count - 2 < cellList.Count)
+						else if (l - verticalSheetColumnCount * Count - 2 < cellList.Count)
 						{
 							if (modelC == string.Empty)
 							{
@@ -612,7 +941,7 @@ namespace WPFTest
 							}
 							else
 							{
-								string sampleName = cellList[l - sheetColumnCount * Count - 2];
+								string sampleName = cellList[l - verticalSheetColumnCount * Count - 2];
 								if (sampleName.Contains("平均"))
 								{
 									//获取平均样的位置
@@ -808,10 +1137,10 @@ namespace WPFTest
 			cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center; //水平居中
 			cellStyle.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center; //垂直居中
 			cellStyle.WrapText = true;//自动换行
-			cellStyle.BorderBottom = BorderStyle.Thin;
-			cellStyle.BorderRight = BorderStyle.Thin;
-			cellStyle.BorderTop = BorderStyle.Thin;
-			cellStyle.BorderLeft = BorderStyle.Thin;
+			//cellStyle.BorderBottom = BorderStyle.Thin;
+			//cellStyle.BorderRight = BorderStyle.Thin;
+			//cellStyle.BorderTop = BorderStyle.Thin;
+			//cellStyle.BorderLeft = BorderStyle.Thin;
 			cellStyle.TopBorderColor = HSSFColor.Black.Index;//DarkGreen(黑绿色)
 			cellStyle.RightBorderColor = HSSFColor.Black.Index;
 			cellStyle.BottomBorderColor = HSSFColor.Black.Index;

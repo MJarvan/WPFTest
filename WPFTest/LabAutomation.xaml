@@ -18,10 +18,11 @@
             <StackPanel VerticalAlignment="Center">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="0">
@@ -41,8 +42,11 @@
                         <TextBox  Name="constantvolumeTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
                     </StackPanel>
                     <StackPanel Margin="5,0,5,0" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Label Content="系数：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <TextBox Name="coefficientTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                    </StackPanel>
+                    <StackPanel Margin="5,0,5,0" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Button Width="50" FontSize="16" HorizontalAlignment="Center" Name="importAll" Click="importAll_Click">导出</Button>
-                        <!--<Button Width="80" Margin="5,0,5,0" FontSize="16" HorizontalAlignment="Center" Name="importLess" Click="importLess_Click">导出模板2</Button>-->
                     </StackPanel>
                 </Grid>
             </StackPanel>
@@ -78,9 +82,8 @@
                         <ComboBox VerticalAlignment="Center" MinWidth="50" Name="FormulaComboBox">
                             <ComboBoxItem Content="C = Ci×f×V1 / V" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Content="C = Ci × f / V"></ComboBoxItem>
+                            <ComboBoxItem Content="X = Ci * f * (V1 / V) * (1/1000)"></ComboBoxItem>
                         </ComboBox>
-                        <Label Content="系数：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
-                        <TextBox Name="coefficientTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
                         <RadioButton Name="testZDRadoiButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
                         <RadioButton Name="testJCRadoiButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
                     </StackPanel>

@@ -84,8 +84,8 @@
                             <ComboBoxItem Content="C = Ci × f / V"></ComboBoxItem>
                             <ComboBoxItem Content="X = Ci * f * (V1 / V) * (1/1000)"></ComboBoxItem>
                         </ComboBox>
-                        <RadioButton Name="testZDRadoiButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
-                        <RadioButton Name="testJCRadoiButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
+                        <RadioButton Name="testZDRadioButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
+                        <RadioButton Name="testJCRadioButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
                     </StackPanel>
                     <Grid Grid.Row="1" Name="maingrid">
                         

@@ -300,6 +300,7 @@ namespace WPFTest
 			}
 
 			newsampleNameList = psNameList.ToList();
+			newsampleNameList.Add("以下空白");
 
 			int Count = psNameList.Count % importTakeNum > 0 ? psNameList.Count / importTakeNum + 1 : psNameList.Count / importTakeNum;
 
@@ -445,6 +446,7 @@ namespace WPFTest
 						}
 					case 4:
 						{
+							row.HeightInPoints = 30;
 							var methodbasisCell = row.CreateCell(0);
 							methodbasisCell.CellStyle = cellStyle;
 							methodbasisCell.SetCellValue("方法依据：");
@@ -557,7 +559,14 @@ namespace WPFTest
 					}
 					else if (i == 11 && j == 4)
 					{
-						cell.SetCellValue("检出限(mg/L)");
+						if (testZDRadioButton.IsChecked == true)
+						{
+							cell.SetCellValue(testZDRadioButton.Content + "(mg/L)");
+						}
+						else if (testJCRadioButton.IsChecked == true)
+						{
+							cell.SetCellValue(testJCRadioButton.Content + "(mg/L)");
+						}
 						CellRangeAddress outregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
 						sheet.AddMergedRegion(outregion);
 					}
@@ -573,7 +582,6 @@ namespace WPFTest
 					}
 				}
 			}
-
 			foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
 			{
 				CreateHorizontalSheet(sheet,bordercellStyle,keyValuePair.Key,keyValuePair.Value,Count);
@@ -696,9 +704,8 @@ namespace WPFTest
 			var limitCell = limitrow.GetCell(Count);
 			limitCell.SetCellValue(modelC);//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
 
-			for (int k = 0; k < newsampleNameList.Count; k++)
+			foreach (string sampleName in newsampleNameList.OrderBy(x=>x.Trim()))
 			{
-				string sampleName = newsampleNameList[k];
 				HSSFRow row = (HSSFRow)sheet.CreateRow(sheet.PhysicalNumberOfRows);
 				row.HeightInPoints = 20;
 				//还是把每个cell弄出来慢慢做
@@ -710,8 +717,8 @@ namespace WPFTest
 					//赋值
 					if (i == Count)
 					{
-						string value = CompareCompoundWithFormula(compoundName,modelC,sampleName);
-						cell.SetCellValue(value);
+						string setvalue = (sampleName == "以下空白") ?  string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
+						cell.SetCellValue(setvalue);
 					}
 					else
 					{
@@ -724,17 +731,20 @@ namespace WPFTest
 								}
 							case 1:
 								{
-									cell.SetCellValue(samplingquantityTextBox.Text);
+									string setvalue = (sampleName == "以下空白") ?  string.Empty : samplingquantityTextBox.Text;
+									cell.SetCellValue(setvalue);
 									break;
 								}
 							case 2:
 								{
-									cell.SetCellValue(dilutionratioTextBox.Text);
+									string setvalue = (sampleName == "以下空白") ?  string.Empty : dilutionratioTextBox.Text;
+									cell.SetCellValue(setvalue);
 									break;
 								}
 							case 3:
 								{
-									cell.SetCellValue(constantvolumeTextBox.Text);
+									string setvalue = (sampleName == "以下空白") ?  string.Empty : constantvolumeTextBox.Text;
+									cell.SetCellValue(setvalue);
 									break;
 								}
 							default:
@@ -894,13 +904,13 @@ namespace WPFTest
 				}
 				else if (k == 1 + verticalSheetColumnCount * Count)
 				{
-					if (testZDRadoiButton.IsChecked == true)
+					if (testZDRadioButton.IsChecked == true)
 					{
-						cell.SetCellValue(testZDRadoiButton.Content + "(mg/L)");
+						cell.SetCellValue(testZDRadioButton.Content + "(mg/L)");
 					}
-					else if (testJCRadoiButton.IsChecked == true)
+					else if (testJCRadioButton.IsChecked == true)
 					{
-						cell.SetCellValue(testJCRadoiButton.Content + "(mg/L)");
+						cell.SetCellValue(testJCRadioButton.Content + "(mg/L)");
 					}
 				}
 				else if (k == 2 + verticalSheetColumnCount * Count)
@@ -1128,7 +1138,15 @@ namespace WPFTest
 					}
 				}
 			}
-			return "<" + modelC;
+
+			if (testZDRadioButton.IsChecked == true)
+			{
+				return "<" + modelC;
+			}
+			else
+			{
+				return "ND";
+			}
 		}
 
 		private HSSFCellStyle CreateStyle(HSSFWorkbook workbook)

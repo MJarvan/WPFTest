@@ -135,11 +135,10 @@ namespace WPFTest
 						data.Clear();
 					}
 				}
-				bool isOK = false;
 
 				foreach (List<string> vs in txtList)
 				{
-					isOK = CreateDataTable(tabControl,vs);
+					bool isOK = CreateDataTable(tabControl,vs);
 					if (!isOK)
 					{
 						return;
@@ -166,6 +165,7 @@ namespace WPFTest
 			sampleNameList.Clear();
 			newsampleNameList.Clear();
 			ReportNo = string.Empty;
+			ReportNoLabel.Content = ReportNo;
 			compoundsDataSet.Tables.Clear();
 			maingrid.Children.Clear();
 			finalsampleNameList.Clear();
@@ -418,6 +418,19 @@ namespace WPFTest
 							samplekindCell.CellStyle = cellStyle;
 							samplekindCell.SetCellValue("样品类别：");
 							int a = samplekindCell.RowIndex;
+							var testCell = row.CreateCell(1);
+							testCell.CellStyle = cellStyle;
+							double testNum = double.Parse(ReportNo.Replace("W",""));
+							string returnvalue = ScientificCounting(testNum);
+							if (returnvalue.Contains("×"))
+							{
+								//excel富文本
+								HSSFRichTextString rts1 = new HSSFRichTextString(returnvalue);
+								var cellStyleFont = (HSSFFont)workbook.CreateFont(); //创建字体
+								cellStyleFont.TypeOffset = FontSuperScript.Super;//字体上标下标
+								rts1.ApplyFont(returnvalue.Length - 1,returnvalue.Length,cellStyleFont);
+								testCell.SetCellValue(rts1);
+							}
 							CellRangeAddress firstregion = new CellRangeAddress(i,i,1,2);
 							sheet.AddMergedRegion(firstregion);
 							var instrumentnumberCell = row.CreateCell(3);
@@ -463,19 +476,20 @@ namespace WPFTest
 							StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
 							if (FormulaComboBox.Text.Contains("X"))
 							{
-								stringBuilder.Append("X—水样TPH的质量浓度,mg/L；\n");
+								stringBuilder.Append("X—水样TPH的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
 							}
 							else
 							{
-								stringBuilder.Append("C—样品中目标物的质量浓度,μg/L\n");
+								stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
 							}
+							//测定浓度要根据她自己填的
 							stringBuilder.Append("Ci——目标物上机测定浓度，ng\n");
 							if (FormulaComboBox.Text.Contains("V1"))
 							{
-								stringBuilder.Append("V1——定容体积( mL )\n");
+								stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
 							}
 							stringBuilder.Append("f——稀释倍数\n");
-							stringBuilder.Append("V——取样量( mL )\n");
+							stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
 							formulacell.SetCellValue(stringBuilder.ToString());
 							break;
 						}
@@ -530,7 +544,7 @@ namespace WPFTest
 								}
 							case 1:
 								{
-									cell.SetCellValue("水样体积 V(L)");
+									cell.SetCellValue("水样体积\nV(" + samplingquantityComboBox.Text + ")");
 									break;
 								}
 							case 2:
@@ -540,7 +554,7 @@ namespace WPFTest
 								}
 							case 3:
 								{
-									cell.SetCellValue("试样体积 V1(mL)");
+									cell.SetCellValue("试样体积\nV1(" + constantvolumeComboBox.Text + ")");
 									break;
 								}
 							case 4:
@@ -591,23 +605,26 @@ namespace WPFTest
 			//自动调整列距
 			for (int i = 0; i < horizontalSheetColumnCount; i++)
 			{
-				if (i == horizontalSheetColumnCount - 1)
-				{
-					sheet.SetColumnWidth(i,20 * 256);
-				}
-				else
-				{
-					sheet.AutoSizeColumn(i);
-				}
+				//if (i == horizontalSheetColumnCount - 1)
+				//{
+				//	sheet.SetColumnWidth(i,20 * 256);
+				//}
+				//else
+				//{
+				//	sheet.AutoSizeColumn(i);
+				//}
+				sheet.AutoSizeColumn(i);
 				int width = sheet.GetColumnWidth(i);
-				if (width < 10 * 256)
+				if (width < 15 * 256)
 				{
-					sheet.SetColumnWidth(i,10 * 256);
+					sheet.SetColumnWidth(i,15 * 256);
 				}
 			}
 
 			ExportToExcel(workbook);
 		}
+
+
 
 		/// <summary>
 		/// 创建横表Excel
@@ -694,7 +711,14 @@ namespace WPFTest
 			}
 		}
 
-
+		/// <summary>
+		/// 创建竖表
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="cellStyle"></param>
+		/// <param name="compoundName"></param>
+		/// <param name="modelC"></param>
+		/// <param name="Count"></param>
 		private void CreateHorizontalSheet(ISheet sheet,HSSFCellStyle cellStyle,string compoundName,string modelC,int Count)
 		{
 			HSSFRow samplerow = (HSSFRow)sheet.GetRow(10);
@@ -757,6 +781,15 @@ namespace WPFTest
 			}
 		}
 
+
+		/// <summary>
+		/// 创建横表
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="cellStyle"></param>
+		/// <param name="cellList"></param>
+		/// <param name="advantageNum"></param>
+		/// <param name="Count"></param>
 		private void CreateVerticalSheet(ISheet sheet,HSSFCellStyle cellStyle,List<string> cellList,List<int> advantageNum,int Count)
 		{
 			cellStyle.BorderBottom = BorderStyle.Thin;
@@ -782,14 +815,21 @@ namespace WPFTest
 					sheet.AddMergedRegion(region);
 					//要和公式那一块绑定在一起
 					StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
-					stringBuilder.Append("式中：C—样品中目标物的质量浓度,μg/L\n");
+					if (FormulaComboBox.Text.Contains("X"))
+					{
+						stringBuilder.Append("X—水样TPH的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+					}
+					else
+					{
+						stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+					}
 					stringBuilder.Append("Ci——目标物上机测定浓度，ng\n");
 					if (FormulaComboBox.Text.Contains("V1"))
 					{
-						stringBuilder.Append("V1——定容体积( mL )\n");
+						stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
 					}
 					stringBuilder.Append("f——稀释倍数\n");
-					stringBuilder.Append("V——取样量( mL )\n");
+					stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
 					formulacell.SetCellValue(stringBuilder.ToString());//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
 
 				}
@@ -817,14 +857,14 @@ namespace WPFTest
 								}
 								else
 								{
-									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() + "(" + samplingquantityComboBox.Text + ")" : samplingquantityTextBox.Text;
 									cell.SetCellValue(setvalue);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() + "(" + samplingquantityComboBox.Text + ")" : samplingquantityTextBox.Text;
 							cell.SetCellValue(setvalue);
 						}
 					}
@@ -841,14 +881,14 @@ namespace WPFTest
 								}
 								else
 								{
-									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? constantvolumeLabel.Content.ToString() + "(" + constantvolumeComboBox.Text + ")" : constantvolumeTextBox.Text;
 									cell.SetCellValue(setvalue);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? constantvolumeLabel.Content.ToString() + "(" + constantvolumeComboBox.Text + ")" : constantvolumeTextBox.Text;
 							cell.SetCellValue(setvalue);
 						}
 					}
@@ -865,14 +905,14 @@ namespace WPFTest
 								}
 								else
 								{
-									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
 									cell.SetCellValue(setvalue);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() : samplingquantityTextBox.Text;
+							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
 							cell.SetCellValue(setvalue);
 						}
 					}
@@ -972,6 +1012,36 @@ namespace WPFTest
 			}
 		}
 
+		/// <summary>
+		/// 科学计数法
+		/// </summary>
+		/// <param name="testNum"></param>
+		/// <returns></returns>
+		private string ScientificCounting(double testNum)
+		{
+			string returnnum = string.Empty;
+			string oneNum = "1";
+			if (testNum.ToString().Length > 4)
+			{
+				for (int i = 0; i < testNum.ToString().Length - 1; i++)
+				{
+					oneNum += "0";
+				}
+
+				double onenum = double.Parse(oneNum);
+				returnnum = (testNum / onenum).ToString() + "×" + "10" + (testNum.ToString().Length - 1).ToString();
+			}
+			return returnnum;
+		}
+
+		/// <summary>
+		/// 计算平行样浓度平均值
+		/// </summary>
+		/// <param name="compoundName"></param>
+		/// <param name="modelC"></param>
+		/// <param name="sampleName1"></param>
+		/// <param name="sampleName2"></param>
+		/// <returns></returns>
 		private string CompareCompoundWithFormula(string compoundName,string modelC,string sampleName1,string sampleName2)
 		{
 			//计算公式C = Ci×f×V1 / V * k
@@ -1068,7 +1138,13 @@ namespace WPFTest
 		}
 
 
-
+		/// <summary>
+		/// 计算目标化合物浓度
+		/// </summary>
+		/// <param name="compoundName"></param>
+		/// <param name="modelC"></param>
+		/// <param name="sampleName"></param>
+		/// <returns></returns>
 		private string CompareCompoundWithFormula(string compoundName,string modelC,string sampleName)
 		{
 			//计算公式C = Ci×f×V1 / V * k
@@ -1197,6 +1273,12 @@ namespace WPFTest
 			}
 		}
 
+		/// <summary>
+		/// 计算精度
+		/// </summary>
+		/// <param name="compoundName"></param>
+		/// <param name="C"></param>
+		/// <returns></returns>
 		private string CalculateAccuracyC(string compoundName,string C)
 		{
 			double answer = double.NaN;
@@ -1241,7 +1323,7 @@ namespace WPFTest
 				string newanswer = answer.ToString();
 				for (int i = 0; i < num; i++)
 				{
-					newanswer = newanswer + "0";
+					newanswer += "0";
 				}
 				return newanswer;
 			}
@@ -1405,10 +1487,5 @@ namespace WPFTest
 			return null;
 		}
 		#endregion
-
-		private void importLess_Click(object sender,RoutedEventArgs e)
-		{
-
-		}
 	}
 }

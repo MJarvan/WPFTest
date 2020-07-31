@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPFTest"
         mc:Ignorable="d"
-        Title="LabAutomation" Height="600" Width="1000"
+        Title="LabAutomation" Height="600" Width="1200"
         WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Grid>
         <Grid.RowDefinitions>
@@ -13,56 +13,63 @@
             <RowDefinition Height="9*" />
         </Grid.RowDefinitions>
         <!--菜单栏部分-->
-        <Grid Grid.Row="0">
-            <!--计算公式部分-->
-            <StackPanel VerticalAlignment="Center">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="0">
-                        <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Content="委托单号："></Label>
-                        <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Name="ReportNoLabel"></Label>
-                    </StackPanel>
-                    <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="1">
-                        <Label Name="samplingquantityLabel" Content="取样量V" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
-                        <TextBox Name="samplingquantityTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
-                        <ComboBox VerticalAlignment="Center" MinWidth="50" Name="samplingquantityComboBox">
-                            <ComboBoxItem Content="mL" IsSelected="True"></ComboBoxItem>
-                            <ComboBoxItem Content="L"></ComboBoxItem>
-                            <ComboBoxItem Content="μL"></ComboBoxItem>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="2">
-                        <Label Name="dilutionratioLabel" Content="稀释倍数f" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
-                        <TextBox Name="dilutionratioTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
-                    </StackPanel>
-                    <StackPanel Margin="5,0,5,0" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Label Name="constantvolumeLabel" Content="定容体积V1" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
-                        <TextBox  Name="constantvolumeTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
-                        <ComboBox VerticalAlignment="Center" MinWidth="50" Name="constantvolumeComboBox">
-                            <ComboBoxItem Content="mL" IsSelected="True"></ComboBoxItem>
-                            <ComboBoxItem Content="L"></ComboBoxItem>
-                            <ComboBoxItem Content="μL"></ComboBoxItem>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Margin="5,0,5,0" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Label Content="系数k：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
-                        <TextBox Name="coefficientTextBox" Height="30" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
-                    </StackPanel>
-                    <StackPanel Margin="5,0,5,0" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Button Width="50" FontSize="16" HorizontalAlignment="Center" Name="importAll" Click="importAll_Click">导出</Button>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
-        </Grid>
-        <!--下方图片预览内容部分-->
-        <ScrollViewer Name="scrollviewer" Grid.Row="1"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Tag="0" Name="topScrollViewer" Grid.Row="0"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+            <Grid>
+                <!--计算公式部分-->
+                <StackPanel VerticalAlignment="Center">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="0">
+                            <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Content="委托单号：" Name="strReportNoLabel"></Label>
+                            <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Name="ReportNoLabel"></Label>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="1">
+                            <Label Name="samplingquantityLabel" Content="取样量V：" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
+                            <TextBox Name="samplingquantityTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                            <ComboBox VerticalAlignment="Center" MinWidth="50" Name="samplingquantityComboBox">
+                                <ComboBoxItem Tag="0.001" Content="mL" IsSelected="True"></ComboBoxItem>
+                                <ComboBoxItem Tag="1" Content="L"></ComboBoxItem>
+                                <ComboBoxItem Tag="0.0000001" Content="μL"></ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="2">
+                            <Label Name="dilutionratioLabel" Content="稀释倍数f：" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
+                            <TextBox Name="dilutionratioTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Label Name="constantvolumeLabel" Content="定容体积V1：" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
+                            <TextBox  Name="constantvolumeTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                            <ComboBox VerticalAlignment="Center" MinWidth="50" Name="constantvolumeComboBox">
+                                <ComboBoxItem Tag="0.001" Content="mL" IsSelected="True"></ComboBoxItem>
+                                <ComboBoxItem Tag="1" Content="L"></ComboBoxItem>
+                                <ComboBoxItem Tag="0.0000001" Content="μL"></ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Label Name="coefficientLabel" Content="系数k：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                            <TextBox Name="coefficientTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button FontSize="16" HorizontalAlignment="Center" Name="importExcel" Click="importExcel_Click" MouseMove="importExcel_MouseMove">导出Excel</Button>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button FontSize="16" HorizontalAlignment="Center" Name="importAll" Click="importAll_Click" MouseMove="importExcel_MouseMove">导出模板</Button>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+           
+        <!--下方内容部分-->
+        <ScrollViewer Tag="1" Name="mainScrollViewer" Grid.Row="1"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
             <Border BorderThickness="1" BorderBrush="Black" Name="gridborder" >
                 <Grid>
                     <Grid.RowDefinitions>
@@ -73,7 +80,16 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <Label Content="搜索信息：" Margin="10,0,0,0" VerticalContentAlignment="Center"></Label>
                         <TextBox VerticalContentAlignment="Center" MinWidth="100" ToolTip="请输入搜索内容" Name="searchTextBox" TextChanged="searchTextBox_TextChanged"></TextBox>
-                        <Label Content="计算精度：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <Label Name="TargetCompanyLabel" Content="目标化合物浓度单位：" Margin="10,0,0,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"></Label>
+                        <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="TargetCompanyComboBox">
+                            <ComboBoxItem Content="mg/L" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Content="ng/L"></ComboBoxItem>
+                            <ComboBoxItem Content="μg/L"></ComboBoxItem>
+                            <ComboBoxItem Content="mg"></ComboBoxItem>
+                            <ComboBoxItem Content="ng"></ComboBoxItem>
+                            <ComboBoxItem Content="μg"></ComboBoxItem>
+                        </ComboBox>
+                        <Label Name="AccuracyLabel" Content="计算精度：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
                         <ComboBox VerticalAlignment="Center" MinWidth="50" Name="AccuracyComboBox">
                             <ComboBoxItem Content="默认" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Content="0"></ComboBoxItem>
@@ -88,7 +104,7 @@
                             <ComboBoxItem Content="9"></ComboBoxItem>
                         </ComboBox>
 
-                        <Label Content="公式：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <Label Name="FormulaLabel" Content="公式：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
                         <ComboBox VerticalAlignment="Center" MinWidth="50" Name="FormulaComboBox">
                             <ComboBoxItem Content="C = Ci×f×V1 / V" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Content="C = Ci × f / V"></ComboBoxItem>
@@ -96,8 +112,8 @@
                         </ComboBox>
                         <RadioButton Name="testZDRadioButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
                         <RadioButton Name="testJCRadioButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
-                        <Label Content="单位：" Margin="10,0,0,0" VerticalContentAlignment="Center"></Label>
-                        <ComboBox VerticalAlignment="Center" MinWidth="50" Name="ZDJCCompanyComboBox">
+                        <Label Content="单位：" HorizontalAlignment="Center" VerticalContentAlignment="Center"></Label>
+                        <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="ZDJCCompanyComboBox">
                             <ComboBoxItem Content="mg/L" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Content="ng/L"></ComboBoxItem>
                             <ComboBoxItem Content="μg/L"></ComboBoxItem>

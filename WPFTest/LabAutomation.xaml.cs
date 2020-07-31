@@ -75,8 +75,10 @@ namespace WPFTest
 
 		private void Window_Loaded(object sender,RoutedEventArgs e)
 		{
-			scrollviewer.DragEnter += scDragEnter;
-			scrollviewer.Drop += scDrop;
+			topScrollViewer.DragEnter += scDragEnter;
+			topScrollViewer.Drop += scDrop;
+			mainScrollViewer.DragEnter += scDragEnter;
+			mainScrollViewer.Drop += scDrop;
 			samplingquantityLabel.Tag = 0;
 			dilutionratioLabel.Tag = 1;
 			constantvolumeLabel.Tag = 2;
@@ -93,17 +95,22 @@ namespace WPFTest
 			//{
 			//	MessageBox.Show(str);
 			//}
+			ScrollViewer scrollViewer = sender as ScrollViewer;
 
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
 				e.Effects = DragDropEffects.Link;
 
 				string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-				/*foreach (string path in paths)
+				if (int.Parse(scrollViewer.Tag.ToString()) == 0)
 				{
-					CreateTxt(path);
-				}*/
-				CreateTxt(paths[0]);
+					//导入模板
+				}
+				else if (int.Parse(scrollViewer.Tag.ToString()) == 1)
+				{
+					//创建数据结构
+					CreateTxt(paths[0]);
+				}
 			}
 			e.Handled = true;
 		}
@@ -145,11 +152,7 @@ namespace WPFTest
 					}
 				}
 				AddParallelSamplesToList();
-				if (compoundsNameList.Count > 4)
-				{
-					KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
-					compoundsNameList.Add(keyValuePair);
-				}
+
 				maingrid.Children.Add(tabControl);
 				ReportNoLabel.Content = ReportNo;
 			}
@@ -178,14 +181,14 @@ namespace WPFTest
 			sampleNameList.Clear();
 			string[] name = vs[1].Split("\t");
 
-			//缺少自我填写的最低检测质量浓度
-			if (name.Length < 3)
-			{
-				MessageBox.Show(name[1] + "缺少最低检测质量浓度或检出限，请补充填写！");
-				return false;
-			}
-			KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(name[1],name[2]);
-			compoundsNameList.Add(keyValuePair);
+			////缺少自我填写的最低检测质量浓度
+			//if (name.Length < 3)
+			//{
+			//	MessageBox.Show(name[1] + "缺少最低检测质量浓度或检出限，请补充填写！");
+			//	return false;
+			//}
+			//KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(name[1],name[2]);
+
 
 			List<string> tablehead = vs[2].Split("\t").ToList();
 			DataTable datatable = new DataTable();
@@ -219,13 +222,13 @@ namespace WPFTest
 						if (newname.Length > 1)
 						{
 							ReportNo = (ReportNo == string.Empty) ? newname[0] : ReportNo;
-							sampleNameList.Add(newname[1]);
+							sampleNameList.Insert(0,newname[1]);
 							datatable.Rows[k]["数据文件名"] = newname[1];
 						}
 						else
 						{
 							datatable.Rows[k]["数据文件名"] = newname[0];
-							sampleNameList.Add(newname[0]);
+							sampleNameList.Insert(0,newname[0]);
 						}
 					}
 				}
@@ -258,7 +261,9 @@ namespace WPFTest
 			}
 
 			TabItem tabItem = new TabItem();
-			tabItem.Header = name[1] + " | " + name[2];
+			//tabItem.Header = name[1] + " | " + name[2];
+			StackPanel stackPanel = CreateStackPanel(name[1]);
+			tabItem.Header = stackPanel;
 			DataGrid dg = new DataGrid();
 			dg.Name = "dataGrid";
 			dg.ItemsSource = newdatatable.DefaultView;
@@ -269,6 +274,30 @@ namespace WPFTest
 			compoundsDataSet.Tables.Add(newdatatable);
 
 			return true;
+		}
+
+		/// <summary>
+		/// 创建tabheader用的stackpanel
+		/// </summary>
+		/// <returns></returns>
+		private StackPanel CreateStackPanel(string compoundsName)
+		{
+			StackPanel stackPanel = new StackPanel();
+			stackPanel.Orientation = Orientation.Horizontal;
+			stackPanel.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+			stackPanel.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+			Label label = new Label();
+			label.Content = compoundsName;
+			label.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
+			label.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+			TextBox textBox = new TextBox();
+			textBox.Width = 50;
+			textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+			textBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+			stackPanel.Children.Add(label);
+			stackPanel.Children.Add(textBox);
+
+			return stackPanel;
 		}
 
 		/// <summary>
@@ -345,7 +374,7 @@ namespace WPFTest
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void importAll_Click(object sender,RoutedEventArgs e)
+		private void importExcel_Click(object sender,RoutedEventArgs e)
 		{
 			if (finalsampleNameList.Count == 0 || newsampleNameList.Count == 0)
 			{
@@ -361,6 +390,47 @@ namespace WPFTest
 				CreateHorizontalExcel();
 			}
 
+		}
+
+		/// <summary>
+		/// 添加自己填的检出限
+		/// </summary>
+		private void AddDetectionLimit()
+		{
+			compoundsNameList.Clear();
+			TabControl tabControl = maingrid.Children[0] as TabControl;
+			foreach (TabItem tabItem in tabControl.Items)
+			{
+				string compoundsName = string.Empty;
+				string modelC = string.Empty;
+				StackPanel stackPanel = tabItem.Header as StackPanel;
+				foreach (var item in stackPanel.Children)
+				{
+					if (item.GetType() == typeof(Label))
+					{
+						compoundsName = (item as Label).Content.ToString();
+					}
+					else if (item.GetType() == typeof(TextBox))
+					{
+						if ((item as TextBox).Text != null && (item as TextBox).Text != "" && (item as TextBox).Text != string.Empty)
+						{
+							modelC = (item as TextBox).Text;
+						}
+						else
+						{
+							return;
+						}
+					}
+				}
+				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(compoundsName,modelC);
+				compoundsNameList.Add(keyValuePair);
+			}
+
+			if (compoundsNameList.Count > 4)
+			{
+				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
+				compoundsNameList.Add(keyValuePair);
+			}
 		}
 
 		/// <summary>
@@ -483,7 +553,7 @@ namespace WPFTest
 								stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
 							}
 							//测定浓度要根据她自己填的
-							stringBuilder.Append("Ci——目标物上机测定浓度，ng\n");
+							stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
 							if (FormulaComboBox.Text.Contains("V1"))
 							{
 								stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
@@ -575,18 +645,18 @@ namespace WPFTest
 					{
 						if (testZDRadioButton.IsChecked == true)
 						{
-							cell.SetCellValue(testZDRadioButton.Content + "(mg/L)");
+							cell.SetCellValue(testZDRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")");
 						}
 						else if (testJCRadioButton.IsChecked == true)
 						{
-							cell.SetCellValue(testJCRadioButton.Content + "(mg/L)");
+							cell.SetCellValue(testJCRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")");
 						}
 						CellRangeAddress outregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
 						sheet.AddMergedRegion(outregion);
 					}
 					else if (i == 13 && j == 4)
 					{
-						cell.SetCellValue("目标化合物浓度(mg/L)");
+						cell.SetCellValue("目标化合物浓度(" + TargetCompanyComboBox.Text + ")");
 						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
 						sheet.AddMergedRegion(targetregion);
 					}
@@ -823,7 +893,7 @@ namespace WPFTest
 					{
 						stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
 					}
-					stringBuilder.Append("Ci——目标物上机测定浓度，ng\n");
+					stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
 					if (FormulaComboBox.Text.Contains("V1"))
 					{
 						stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
@@ -946,16 +1016,16 @@ namespace WPFTest
 				{
 					if (testZDRadioButton.IsChecked == true)
 					{
-						cell.SetCellValue(testZDRadioButton.Content + "(mg/L)");
+						cell.SetCellValue(testZDRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")");
 					}
 					else if (testJCRadioButton.IsChecked == true)
 					{
-						cell.SetCellValue(testJCRadioButton.Content + "(mg/L)");
+						cell.SetCellValue(testJCRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")");
 					}
 				}
 				else if (k == 2 + verticalSheetColumnCount * Count)
 				{
-					cell.SetCellValue("目标化合物浓度 C (mg/L)");
+					cell.SetCellValue("目标化合物浓度 C (" + TargetCompanyComboBox.Text + ")");
 				}
 			}
 
@@ -1195,13 +1265,24 @@ namespace WPFTest
 									//公式计算
 									//先用写死的，然后之后学习反射
 									double C;
+									//单位换算
 									if (FormulaComboBox.Text.Contains("V1"))
 									{
+										if (samplingquantityComboBox.Text != constantvolumeComboBox.Text)
+										{
+											double moleculeV1 = double.Parse(constantvolumeComboBox.Tag.ToString());
+											double denominatorV = double.Parse(samplingquantityComboBox.Tag.ToString());
+											//系数加上分子除以分母
+											k *= (moleculeV1 / denominatorV);
+										}
 										C = Ci * f * V1 / V * k;
 									}
 									else
 									{
-										C = Ci * f / V * k;
+										//要问魏远升是选哪一条
+										double denominatorV = double.Parse(samplingquantityComboBox.Tag.ToString());
+										//C = Ci * f / V * k * denominatorV;
+										C = Ci * f / V * k / denominatorV;
 									}
 									if (C > double.Parse(modelC))
 									{
@@ -1330,6 +1411,77 @@ namespace WPFTest
 			return answer.ToString().Trim();
 		}
 
+
+		/// <summary>
+		/// 导出模板按钮
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void importAll_Click(object sender,RoutedEventArgs e)
+		{
+			if (finalsampleNameList.Count == 0 || newsampleNameList.Count == 0)
+			{
+				return;
+			}
+
+			string path = @"E:\CreateExcel\";
+			//创建用户临时图片文件夹或者清空临时文件夹所有文件
+			if (!Directory.Exists(path))
+			{
+				Directory.CreateDirectory(path);
+			}
+			string filename = ReportNo + "-模板.txt";
+			string fullpath = System.IO.Path.Combine(path,filename);
+			if (File.Exists(fullpath))
+			{
+				File.Delete(fullpath);
+			}
+			using (FileStream stream = new FileStream(fullpath,FileMode.OpenOrCreate,FileAccess.ReadWrite))
+			{
+				StreamWriter streamWriter = new StreamWriter(stream);
+				streamWriter.WriteLine(strReportNoLabel.Content + ReportNo);
+				streamWriter.WriteLine(samplingquantityLabel.Content + samplingquantityTextBox.Text + samplingquantityComboBox.Text);
+				streamWriter.WriteLine(dilutionratioLabel.Content + dilutionratioTextBox.Text);
+				streamWriter.WriteLine(constantvolumeLabel.Content + constantvolumeTextBox.Text + constantvolumeComboBox.Text);
+				streamWriter.WriteLine(coefficientLabel.Content + coefficientTextBox.Text);
+				streamWriter.WriteLine(TargetCompanyLabel.Content + TargetCompanyComboBox.Text);
+				streamWriter.WriteLine(AccuracyLabel.Content + AccuracyComboBox.Text);
+				streamWriter.WriteLine(FormulaLabel.Content + FormulaComboBox.Text);
+				if (testZDRadioButton.IsChecked == true)
+				{
+					streamWriter.WriteLine(testZDRadioButton.Content + "：" + ZDJCCompanyComboBox.Text);
+				}
+				else if (testJCRadioButton.IsChecked == true)
+				{
+					streamWriter.WriteLine(testJCRadioButton.Content + "：" + ZDJCCompanyComboBox.Text);
+				}
+				foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
+				{
+					streamWriter.WriteLine(keyValuePair.Key + "：" + keyValuePair.Value);
+				}
+				streamWriter.Flush();
+				stream.Flush();
+			}
+			Process process = new Process();
+			ProcessStartInfo processStartInfo = new ProcessStartInfo(fullpath);
+			processStartInfo.UseShellExecute = true;
+			process.StartInfo = processStartInfo;
+			process.Start();
+		}
+
+		/// <summary>
+		/// 生成compoundsNameList
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void importExcel_MouseMove(object sender,MouseEventArgs e)
+		{
+			if (finalsampleNameList.Count == 0 || newsampleNameList.Count == 0)
+			{
+				return;
+			}
+			AddDetectionLimit();
+		}
 		/// <summary>
 		/// 搜索
 		/// </summary>
@@ -1486,6 +1638,8 @@ namespace WPFTest
 			}
 			return null;
 		}
+
 		#endregion
+
 	}
 }

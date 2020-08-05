@@ -37,7 +37,7 @@
                             <ComboBox VerticalAlignment="Center" MinWidth="50" Name="samplingquantityComboBox">
                                 <ComboBoxItem Tag="0.001" Content="mL" IsSelected="True"></ComboBoxItem>
                                 <ComboBoxItem Tag="1" Content="L"></ComboBoxItem>
-                                <ComboBoxItem Tag="0.0000001" Content="μL"></ComboBoxItem>
+                                <ComboBoxItem Tag="0.000001" Content="μL"></ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="2">
@@ -50,7 +50,7 @@
                             <ComboBox VerticalAlignment="Center" MinWidth="50" Name="constantvolumeComboBox">
                                 <ComboBoxItem Tag="0.001" Content="mL" IsSelected="True"></ComboBoxItem>
                                 <ComboBoxItem Tag="1" Content="L"></ComboBoxItem>
-                                <ComboBoxItem Tag="0.0000001" Content="μL"></ComboBoxItem>
+                                <ComboBoxItem Tag="0.000001" Content="μL"></ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -82,12 +82,12 @@
                         <TextBox VerticalContentAlignment="Center" MinWidth="100" ToolTip="请输入搜索内容" Name="searchTextBox" TextChanged="searchTextBox_TextChanged"></TextBox>
                         <Label Name="TargetCompanyLabel" Content="目标化合物浓度单位：" Margin="10,0,0,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"></Label>
                         <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="TargetCompanyComboBox">
-                            <ComboBoxItem Content="mg/L" IsSelected="True"></ComboBoxItem>
-                            <ComboBoxItem Content="ng/L"></ComboBoxItem>
-                            <ComboBoxItem Content="μg/L"></ComboBoxItem>
-                            <ComboBoxItem Content="mg"></ComboBoxItem>
-                            <ComboBoxItem Content="ng"></ComboBoxItem>
-                            <ComboBoxItem Content="μg"></ComboBoxItem>
+                            <ComboBoxItem Tag="1" Content="mg/L" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.001"  Content="ng/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001" Content="μg/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="1" Content="mg"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.001" Content="ng"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001"  Content="μg"></ComboBoxItem>
                         </ComboBox>
                         <Label Name="AccuracyLabel" Content="计算精度：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
                         <ComboBox VerticalAlignment="Center" MinWidth="50" Name="AccuracyComboBox">
@@ -114,9 +114,9 @@
                         <RadioButton Name="testJCRadioButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
                         <Label Content="单位：" HorizontalAlignment="Center" VerticalContentAlignment="Center"></Label>
                         <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="ZDJCCompanyComboBox">
-                            <ComboBoxItem Content="mg/L" IsSelected="True"></ComboBoxItem>
-                            <ComboBoxItem Content="ng/L"></ComboBoxItem>
-                            <ComboBoxItem Content="μg/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="1" Content="mg/L" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.001"  Content="ng/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001" Content="μg/L"></ComboBoxItem>
                         </ComboBox>
                     </StackPanel>
                     <Grid Grid.Row="1" Name="maingrid">

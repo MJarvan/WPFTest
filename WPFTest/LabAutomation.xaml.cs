@@ -39,6 +39,7 @@ namespace WPFTest
 		/// 检测化合物名称合计
 		/// </summary>
 		List<KeyValuePair<string,string>> compoundsNameList = new List<KeyValuePair<string,string>>();
+		List<KeyValuePair<string,string>> preCompoundsNameList = new List<KeyValuePair<string,string>>();
 
 		/// <summary>
 		/// 样品名称合计
@@ -105,6 +106,7 @@ namespace WPFTest
 				if (int.Parse(scrollViewer.Tag.ToString()) == 0)
 				{
 					//导入模板
+					CreateTemplate(paths[0]);
 				}
 				else if (int.Parse(scrollViewer.Tag.ToString()) == 1)
 				{
@@ -115,6 +117,134 @@ namespace WPFTest
 			e.Handled = true;
 		}
 
+		/// <summary>
+		/// 导入模板到程序里面
+		/// </summary>
+		/// <param name="path"></param>
+		private void CreateTemplate(string path)
+		{
+			string symbol = "：";
+			if (File.Exists(path)) 
+			{
+				List<string> alldata = File.ReadAllLines(path,Encoding.UTF8).ToList();
+				foreach(string data in alldata)
+				{
+					//加载常规设置项
+					string key = data.Split(symbol)[0];
+					string value = data.Split(symbol)[1];
+					if ((key + symbol) == samplingquantityLabel.Content.ToString())
+					{
+						string strTextBox = Regex.Replace(value,"[a-z]","",RegexOptions.IgnoreCase);
+						string strComboBox = value.Replace(strTextBox,string.Empty);
+						samplingquantityTextBox.Text = strTextBox;
+						foreach (ComboBoxItem comboBoxItem in samplingquantityComboBox.Items)
+						{
+							if (strComboBox == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					else if ((key + symbol) == dilutionratioLabel.Content.ToString())
+					{
+						dilutionratioTextBox.Text = value;
+					}
+					else if ((key + symbol) == constantvolumeLabel.Content.ToString())
+					{
+						string strTextBox = Regex.Replace(value,"[a-z]","",RegexOptions.IgnoreCase);
+						string strComboBox = value.Replace(strTextBox,string.Empty);
+						constantvolumeTextBox.Text = strTextBox;
+						foreach (ComboBoxItem comboBoxItem in constantvolumeComboBox.Items)
+						{
+							if (strComboBox == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					else if ((key + symbol) == coefficientLabel.Content.ToString())
+					{
+						coefficientTextBox.Text = value;
+					}
+					else if ((key + symbol) == TargetCompanyLabel.Content.ToString())
+					{
+						foreach (ComboBoxItem comboBoxItem in TargetCompanyComboBox.Items)
+						{
+							if (value == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					else if ((key + symbol) == AccuracyLabel.Content.ToString())
+					{
+						foreach (ComboBoxItem comboBoxItem in AccuracyComboBox.Items)
+						{
+							if (value == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					else if ((key + symbol) == FormulaLabel.Content.ToString())
+					{
+						foreach (ComboBoxItem comboBoxItem in FormulaComboBox.Items)
+						{
+							if (value == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					else if (key == testZDRadioButton.Content.ToString())
+					{
+						testZDRadioButton.IsChecked = true;
+						foreach (ComboBoxItem comboBoxItem in ZDJCCompanyComboBox.Items)
+						{
+							if (value == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					else if (key == testJCRadioButton.Content.ToString())
+					{
+						testJCRadioButton.IsChecked = true;
+						foreach (ComboBoxItem comboBoxItem in ZDJCCompanyComboBox.Items)
+						{
+							if (value == comboBoxItem.Content.ToString())
+							{
+								comboBoxItem.IsSelected = true;
+							}
+						}
+					}
+					//加载化合物项
+					else
+					{
+						//有没有添加化合物的文档
+						if (maingrid.Children.Count > 0)
+						{
+							TabControl tabControl = maingrid.Children[0] as TabControl;
+							foreach (TabItem tabItem in tabControl.Items)
+							{
+								StackPanel stackPanel = tabItem.Header as StackPanel;
+								Label label = stackPanel.Children[0] as Label;
+								TextBox textBox = stackPanel.Children[1] as TextBox;
+								if (label.Content.ToString() == key)
+								{
+									textBox.Text = value;
+								}
+							}
+						}
+						else
+						{
+							KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(key,value);
+							preCompoundsNameList.Add(keyValuePair);
+						}
+					}
+				}
+			}
+		}
 		/// <summary>
 		/// 通过文本创造核心内容
 		/// </summary>
@@ -294,6 +424,17 @@ namespace WPFTest
 			textBox.Width = 50;
 			textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
 			textBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+			if (preCompoundsNameList.Count > 0)
+			{
+				foreach (KeyValuePair<string,string> keyValuePair in preCompoundsNameList)
+				{
+					if (keyValuePair.Key == compoundsName)
+					{
+						textBox.Text = keyValuePair.Value;
+					}
+				}
+			}
+
 			stackPanel.Children.Add(label);
 			stackPanel.Children.Add(textBox);
 
@@ -414,6 +555,7 @@ namespace WPFTest
 					{
 						if ((item as TextBox).Text != null && (item as TextBox).Text != "" && (item as TextBox).Text != string.Empty)
 						{
+
 							modelC = (item as TextBox).Text;
 						}
 						else
@@ -487,8 +629,8 @@ namespace WPFTest
 							var samplekindCell = row.CreateCell(0);
 							samplekindCell.CellStyle = cellStyle;
 							samplekindCell.SetCellValue("样品类别：");
-							int a = samplekindCell.RowIndex;
-							var testCell = row.CreateCell(1);
+							//科学计数法
+							/*var testCell = row.CreateCell(1);
 							testCell.CellStyle = cellStyle;
 							double testNum = double.Parse(ReportNo.Replace("W",""));
 							string returnvalue = ScientificCounting(testNum);
@@ -500,7 +642,7 @@ namespace WPFTest
 								cellStyleFont.TypeOffset = FontSuperScript.Super;//字体上标下标
 								rts1.ApplyFont(returnvalue.Length - 1,returnvalue.Length,cellStyleFont);
 								testCell.SetCellValue(rts1);
-							}
+							}*/
 							CellRangeAddress firstregion = new CellRangeAddress(i,i,1,2);
 							sheet.AddMergedRegion(firstregion);
 							var instrumentnumberCell = row.CreateCell(3);
@@ -800,53 +942,65 @@ namespace WPFTest
 
 			foreach (string sampleName in newsampleNameList.OrderBy(x=>x.Trim()))
 			{
-				HSSFRow row = (HSSFRow)sheet.CreateRow(sheet.PhysicalNumberOfRows);
-				row.HeightInPoints = 20;
-				//还是把每个cell弄出来慢慢做
-				for (int i = 0; i < Count + 1; i++)
+				HSSFRow row;
+				if (Count == 4)
 				{
-					var cell = row.CreateCell(i);
-					cell.CellStyle = cellStyle;
+					row = (HSSFRow)sheet.CreateRow(sheet.PhysicalNumberOfRows);
+					row.HeightInPoints = 20;
+					//还是把每个cell弄出来慢慢做
+					for (int i = 0; i < Count + 1; i++)
+					{
+						var cell = row.CreateCell(i);
+						cell.CellStyle = cellStyle;
 
-					//赋值
-					if (i == Count)
-					{
-						string setvalue = (sampleName == "以下空白") ?  string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
-						cell.SetCellValue(setvalue);
-					}
-					else
-					{
-						switch (i)
+						//赋值
+						if (i == Count)
 						{
-							case 0:
-								{
-									cell.SetCellValue(sampleName);
-									break;
-								}
-							case 1:
-								{
-									string setvalue = (sampleName == "以下空白") ?  string.Empty : samplingquantityTextBox.Text;
-									cell.SetCellValue(setvalue);
-									break;
-								}
-							case 2:
-								{
-									string setvalue = (sampleName == "以下空白") ?  string.Empty : dilutionratioTextBox.Text;
-									cell.SetCellValue(setvalue);
-									break;
-								}
-							case 3:
-								{
-									string setvalue = (sampleName == "以下空白") ?  string.Empty : constantvolumeTextBox.Text;
-									cell.SetCellValue(setvalue);
-									break;
-								}
-							default:
-								{
-									break;
-								}
+							string setvalue = (sampleName == "以下空白") ? string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
+							cell.SetCellValue(setvalue);
+						}
+						else
+						{
+							switch (i)
+							{
+								case 0:
+									{
+										cell.SetCellValue(sampleName);
+										break;
+									}
+								case 1:
+									{
+										string setvalue = (sampleName == "以下空白") ? string.Empty : samplingquantityTextBox.Text;
+										cell.SetCellValue(setvalue);
+										break;
+									}
+								case 2:
+									{
+										string setvalue = (sampleName == "以下空白") ? string.Empty : dilutionratioTextBox.Text;
+										cell.SetCellValue(setvalue);
+										break;
+									}
+								case 3:
+									{
+										string setvalue = (sampleName == "以下空白") ? string.Empty : constantvolumeTextBox.Text;
+										cell.SetCellValue(setvalue);
+										break;
+									}
+								default:
+									{
+										break;
+									}
+							}
 						}
 					}
+				}
+				else
+				{
+					row = (HSSFRow)sheet.GetRow(14 + newsampleNameList.OrderBy(x => x.Trim()).ToList().IndexOf(sampleName));
+					var cell = row.CreateCell(Count);
+					cell.CellStyle = cellStyle;
+					string setvalue = (sampleName == "以下空白") ? string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
+					cell.SetCellValue(setvalue);
 				}
 			}
 		}
@@ -1264,25 +1418,42 @@ namespace WPFTest
 									Ci = double.Parse(potency);
 									//公式计算
 									//先用写死的，然后之后学习反射
-									double C;
+									double C = double.NaN;
+									double moleculeV1 = double.Parse((constantvolumeComboBox.SelectedItem as ComboBoxItem).Tag.ToString());
+									double denominatorV = double.Parse((samplingquantityComboBox.SelectedItem as ComboBoxItem).Tag.ToString());
+									double taggetC = double.Parse((TargetCompanyComboBox.SelectedItem as ComboBoxItem).Tag.ToString());
+									double ZDJCCi = double.Parse((ZDJCCompanyComboBox.SelectedItem as ComboBoxItem).Tag.ToString());
 									//单位换算
 									if (FormulaComboBox.Text.Contains("V1"))
 									{
 										if (samplingquantityComboBox.Text != constantvolumeComboBox.Text)
 										{
-											double moleculeV1 = double.Parse(constantvolumeComboBox.Tag.ToString());
-											double denominatorV = double.Parse(samplingquantityComboBox.Tag.ToString());
 											//系数加上分子除以分母
-											k *= (moleculeV1 / denominatorV);
+											k *= moleculeV1 / denominatorV;
+											k *= taggetC / ZDJCCi;
 										}
 										C = Ci * f * V1 / V * k;
 									}
 									else
 									{
-										//要问魏远升是选哪一条
-										double denominatorV = double.Parse(samplingquantityComboBox.Tag.ToString());
-										//C = Ci * f / V * k * denominatorV;
-										C = Ci * f / V * k / denominatorV;
+										//判断C和Ci/V的单位是否一致
+										//比如C为mg/L
+										//Ci为mg
+										//V为mL
+										//后台系数k就应该L/mL = 1000
+										string CCi = TargetCompanyComboBox.Text.Split("/")[0]; 
+										string CV = TargetCompanyComboBox.Text.Split("/")[1];
+				
+										foreach (ComboBoxItem comboBoxItem in samplingquantityComboBox.Items)
+										{
+											if (comboBoxItem.Content.ToString() == CV)
+											{
+												k *= double.Parse(comboBoxItem.Tag.ToString()) / denominatorV;
+												k *= taggetC / ZDJCCi;
+											}
+										}
+										C = Ci * f / V * k;
+		
 									}
 									if (C > double.Parse(modelC))
 									{
@@ -1423,50 +1594,47 @@ namespace WPFTest
 			{
 				return;
 			}
-
-			string path = @"E:\CreateExcel\";
-			//创建用户临时图片文件夹或者清空临时文件夹所有文件
-			if (!Directory.Exists(path))
+			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog();
+			sfd.Filter = "文本文件(*.txt)|*.txt|所有文件|*.*";//设置文件类型
+			//sfd.FileName = "保存";//设置默认文件名
+			sfd.DefaultExt = "txt";//设置默认格式（可以不设）
+			sfd.AddExtension = true;//设置自动在文件名中添加扩展名
+			sfd.ShowDialog();
+			if (sfd.FileName != string.Empty)
 			{
-				Directory.CreateDirectory(path);
-			}
-			string filename = ReportNo + "-模板.txt";
-			string fullpath = System.IO.Path.Combine(path,filename);
-			if (File.Exists(fullpath))
-			{
-				File.Delete(fullpath);
-			}
-			using (FileStream stream = new FileStream(fullpath,FileMode.OpenOrCreate,FileAccess.ReadWrite))
-			{
-				StreamWriter streamWriter = new StreamWriter(stream);
-				streamWriter.WriteLine(strReportNoLabel.Content + ReportNo);
-				streamWriter.WriteLine(samplingquantityLabel.Content + samplingquantityTextBox.Text + samplingquantityComboBox.Text);
-				streamWriter.WriteLine(dilutionratioLabel.Content + dilutionratioTextBox.Text);
-				streamWriter.WriteLine(constantvolumeLabel.Content + constantvolumeTextBox.Text + constantvolumeComboBox.Text);
-				streamWriter.WriteLine(coefficientLabel.Content + coefficientTextBox.Text);
-				streamWriter.WriteLine(TargetCompanyLabel.Content + TargetCompanyComboBox.Text);
-				streamWriter.WriteLine(AccuracyLabel.Content + AccuracyComboBox.Text);
-				streamWriter.WriteLine(FormulaLabel.Content + FormulaComboBox.Text);
-				if (testZDRadioButton.IsChecked == true)
+				string fullpath = sfd.FileName;
+				using (FileStream stream = new FileStream(fullpath,FileMode.Create,FileAccess.ReadWrite))
 				{
-					streamWriter.WriteLine(testZDRadioButton.Content + "：" + ZDJCCompanyComboBox.Text);
+					StreamWriter streamWriter = new StreamWriter(stream);
+					//streamWriter.WriteLine(strReportNoLabel.Content + ReportNo);
+					streamWriter.WriteLine(samplingquantityLabel.Content + samplingquantityTextBox.Text + samplingquantityComboBox.Text);
+					streamWriter.WriteLine(dilutionratioLabel.Content + dilutionratioTextBox.Text);
+					streamWriter.WriteLine(constantvolumeLabel.Content + constantvolumeTextBox.Text + constantvolumeComboBox.Text);
+					streamWriter.WriteLine(coefficientLabel.Content + coefficientTextBox.Text);
+					streamWriter.WriteLine(TargetCompanyLabel.Content + TargetCompanyComboBox.Text);
+					streamWriter.WriteLine(AccuracyLabel.Content + AccuracyComboBox.Text);
+					streamWriter.WriteLine(FormulaLabel.Content + FormulaComboBox.Text);
+					if (testZDRadioButton.IsChecked == true)
+					{
+						streamWriter.WriteLine(testZDRadioButton.Content + "：" + ZDJCCompanyComboBox.Text);
+					}
+					else if (testJCRadioButton.IsChecked == true)
+					{
+						streamWriter.WriteLine(testJCRadioButton.Content + "：" + ZDJCCompanyComboBox.Text);
+					}
+					foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
+					{
+						streamWriter.WriteLine(keyValuePair.Key + "：" + keyValuePair.Value);
+					}
+					streamWriter.Flush();
+					stream.Flush();
 				}
-				else if (testJCRadioButton.IsChecked == true)
-				{
-					streamWriter.WriteLine(testJCRadioButton.Content + "：" + ZDJCCompanyComboBox.Text);
-				}
-				foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
-				{
-					streamWriter.WriteLine(keyValuePair.Key + "：" + keyValuePair.Value);
-				}
-				streamWriter.Flush();
-				stream.Flush();
+				Process process = new Process();
+				ProcessStartInfo processStartInfo = new ProcessStartInfo(fullpath);
+				processStartInfo.UseShellExecute = true;
+				process.StartInfo = processStartInfo;
+				process.Start();
 			}
-			Process process = new Process();
-			ProcessStartInfo processStartInfo = new ProcessStartInfo(fullpath);
-			processStartInfo.UseShellExecute = true;
-			process.StartInfo = processStartInfo;
-			process.Start();
 		}
 
 		/// <summary>

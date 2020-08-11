@@ -33,7 +33,7 @@
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="1">
                             <Label Name="samplingquantityLabel" Content="取样量V：" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
-                            <TextBox Name="samplingquantityTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                            <TextBox Name="samplingquantityTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextChanged="TextBox_TextChanged">1.0</TextBox>
                             <ComboBox VerticalAlignment="Center" MinWidth="50" Name="samplingquantityComboBox">
                                 <ComboBoxItem Tag="0.001" Content="mL" IsSelected="True"></ComboBoxItem>
                                 <ComboBoxItem Tag="1" Content="L"></ComboBoxItem>
@@ -42,11 +42,11 @@
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="2">
                             <Label Name="dilutionratioLabel" Content="稀释倍数f：" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
-                            <TextBox Name="dilutionratioTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                            <TextBox Name="dilutionratioTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextChanged="TextBox_TextChanged">1.0</TextBox>
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                             <Label Name="constantvolumeLabel" Content="定容体积V1：" VerticalAlignment="Center" HorizontalAlignment="Left"></Label>
-                            <TextBox  Name="constantvolumeTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                            <TextBox  Name="constantvolumeTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextChanged="TextBox_TextChanged">1.0</TextBox>
                             <ComboBox VerticalAlignment="Center" MinWidth="50" Name="constantvolumeComboBox">
                                 <ComboBoxItem Tag="0.001" Content="mL" IsSelected="True"></ComboBoxItem>
                                 <ComboBoxItem Tag="1" Content="L"></ComboBoxItem>
@@ -55,7 +55,7 @@
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Label Name="coefficientLabel" Content="系数k：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
-                            <TextBox Name="coefficientTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">1.0</TextBox>
+                            <TextBox Name="coefficientTextBox" Width="50" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextChanged="TextBox_TextChanged">1.0</TextBox>
                         </StackPanel>
                         <StackPanel Margin="5,0,5,0" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button FontSize="16" HorizontalAlignment="Center" Name="importExcel" Click="importExcel_Click" MouseMove="importExcel_MouseMove">导出Excel</Button>
@@ -80,7 +80,7 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <Label Content="搜索信息：" Margin="10,0,0,0" VerticalContentAlignment="Center"></Label>
                         <TextBox VerticalContentAlignment="Center" MinWidth="100" ToolTip="请输入搜索内容" Name="searchTextBox" TextChanged="searchTextBox_TextChanged"></TextBox>
-                        <Label Name="TargetCompanyLabel" Content="目标化合物浓度单位：" Margin="10,0,0,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"></Label>
+                        <Label Name="TargetCompanyLabel" Content="目标物上机测定浓度单位：" Margin="10,0,0,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"></Label>
                         <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="TargetCompanyComboBox">
                             <ComboBoxItem Tag="1" Content="mg/L" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Tag="0.001"  Content="ng/L"></ComboBoxItem>

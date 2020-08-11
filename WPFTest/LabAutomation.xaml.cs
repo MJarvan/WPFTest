@@ -60,7 +60,8 @@ namespace WPFTest
 		string ReportNo = string.Empty;
 
 		//调整一个表格的样品总列数
-		int importTakeNum = 8;
+		//int importTakeNum = 8;
+		int importTakeNum = 4;
 		//调整一个横表格的总列数
 		int verticalSheetColumnCount = 10;
 		//调整一个竖表格的总列数
@@ -522,7 +523,7 @@ namespace WPFTest
 				return;
 			}
 			//判断化合物是否大于4，从而分割成横表或者竖表
-			if (compoundsNameList.Count > 4)
+			if (compoundsNameList.Count > 2)
 			{
 				CreateVerticalExcel();
 			}
@@ -1650,6 +1651,58 @@ namespace WPFTest
 			}
 			AddDetectionLimit();
 		}
+
+		private void TextBox_TextChanged(object sender,TextChangedEventArgs e)
+		{
+			TextBox textbox = sender as TextBox;
+			string text = textbox.Text.Trim();
+			if (text != null && text != "")
+			{
+				Regex r = new Regex(@"^([0-9\.]*)$");
+				if (r.IsMatch(textbox.Text.Trim()) == false)
+				{
+					textbox.Text = textbox.Text.Remove(textbox.Text.Length - 1,1);
+				}
+
+				int numDecimal = 0;
+				for (int i = 0; i < textbox.Text.Length; i++)
+				{
+					if (textbox.Text[i].ToString() == ".")
+					{
+						numDecimal++;
+					}
+				}
+
+				if (numDecimal > 1)
+				{
+					textbox.Text = textbox.Text.Remove(textbox.Text.Length - 1,1);
+				}
+			}
+			textbox.SelectionStart = textbox.Text.Length;
+		}
+		private static string lastText = string.Empty;
+		private void TextBox_KeyUp(object sender,KeyEventArgs e)
+		{
+			TextBox textBox = sender as TextBox;
+			//判断按键是不是要输入的类型。
+			if (textBox.Text != "" && textBox.Text != string.Empty && textBox.Text != lastText)
+			{
+				if (e.Key == Key.Decimal)
+				{
+					
+				}
+				//0-9
+				else if (((int)e.Key < 34 || (int)e.Key > 43) && ((int)e.Key < 74 || (int)e.Key > 83))
+				{
+					textBox.Text = textBox.Text.Remove(textBox.Text.Length - 1,1);
+				}
+			}
+
+			textBox.SelectionStart = textBox.Text.Length;
+			lastText = textBox.Text;
+			e.Handled = true;
+		}
+
 		/// <summary>
 		/// 搜索
 		/// </summary>
@@ -1806,6 +1859,7 @@ namespace WPFTest
 			}
 			return null;
 		}
+
 
 		#endregion
 

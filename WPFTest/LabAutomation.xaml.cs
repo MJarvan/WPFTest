@@ -1064,91 +1064,139 @@ namespace WPFTest
 					var cell = row.CreateCell(j);
 					cell.CellStyle = cellStyle;
 					//按照已有的弄
-					if ((j - verticalSheetColumnCount * Count) - 2 >= cellList.Count)
+					//用于最右边的那一版导出，因为有以下空白的特殊情况
+					if (j - verticalSheetColumnCount * Count - 2 >= cellList.Count && j - verticalSheetColumnCount * Count - 2 < importTakeNum)
+					{
+						string setvalue = (i == 0) ? "以下空白" : "";
+						cell.SetCellValue(setvalue);
+					}
+					else if (j - verticalSheetColumnCount * Count - 2 >= cellList.Count + importTakeNum && j - verticalSheetColumnCount * Count - 2 < importTakeNum * 2)
 					{
 						string setvalue = (i == 0) ? "以下空白" : "";
 						cell.SetCellValue(setvalue);
 					}
 					else if (i == (int)samplingquantityLabel.Tag)
 					{
-						if (advantageNum.Count > 0)
+						//常数
+						if ((j - verticalSheetColumnCount * Count) == 1)
+						{
+							cell.SetCellValue(samplingquantityLabel.Content.ToString().Replace("：",string.Empty) + "(" + samplingquantityComboBox.Text + ")");
+						}
+						//是Ci浓度,都为-
+						else if (j < verticalSheetColumnCount * Count + cellList.Count + 2)
+						{
+							cell.SetCellValue("-");
+						}
+						//是C浓度
+						else if (advantageNum.Count > 0)
 						{
 							foreach (int num in advantageNum)
 							{
-								if (j - verticalSheetColumnCount * Count - 2 == num)
+								if (j - verticalSheetColumnCount * Count - 2 == num + cellList.Count)
 								{
 									cell.SetCellValue("-");
 									break;
 								}
 								else
 								{
-									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() + "(" + samplingquantityComboBox.Text + ")" : samplingquantityTextBox.Text;
-									cell.SetCellValue(setvalue);
+									cell.SetCellValue(samplingquantityTextBox.Text);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? samplingquantityLabel.Content.ToString() + "(" + samplingquantityComboBox.Text + ")" : samplingquantityTextBox.Text;
-							cell.SetCellValue(setvalue);
+							cell.SetCellValue(samplingquantityTextBox.Text);
 						}
 					}
 					else if (i == (int)constantvolumeLabel.Tag)
 					{
-						if (advantageNum.Count > 0)
+						//常数
+						if ((j - verticalSheetColumnCount * Count) == 1)
+						{
+							cell.SetCellValue(constantvolumeLabel.Content.ToString().Replace("：",string.Empty) + "(" + constantvolumeComboBox.Text + ")");
+						}
+						//是Ci浓度,都为-
+						else if (j < verticalSheetColumnCount * Count + cellList.Count + 2)
+						{
+							cell.SetCellValue("-");
+						}
+						//是C浓度
+						else if (advantageNum.Count > 0)
 						{
 							foreach (int num in advantageNum)
 							{
-								if (j - verticalSheetColumnCount * Count - 2 == num)
+								if (j - verticalSheetColumnCount * Count - 2 == num + cellList.Count)
 								{
 									cell.SetCellValue("-");
 									break;
 								}
 								else
 								{
-									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? constantvolumeLabel.Content.ToString() + "(" + constantvolumeComboBox.Text + ")" : constantvolumeTextBox.Text;
-									cell.SetCellValue(setvalue);
+									cell.SetCellValue(constantvolumeTextBox.Text);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? constantvolumeLabel.Content.ToString() + "(" + constantvolumeComboBox.Text + ")" : constantvolumeTextBox.Text;
-							cell.SetCellValue(setvalue);
+							cell.SetCellValue(constantvolumeTextBox.Text);
 						}
 					}
 					else if (i == (int)dilutionratioLabel.Tag)
 					{
-						if (advantageNum.Count > 0)
+						//常数
+						if ((j - verticalSheetColumnCount * Count) == 1)
+						{
+							cell.SetCellValue(dilutionratioLabel.Content.ToString().Replace("：",string.Empty));
+						}
+						//是Ci浓度,都为-
+						else if (j < verticalSheetColumnCount * Count + cellList.Count + 2)
+						{
+							cell.SetCellValue("-");
+						}
+						//是C浓度
+						else if (advantageNum.Count > 0)
 						{
 							foreach (int num in advantageNum)
 							{
-								if (j - verticalSheetColumnCount * Count - 2 == num)
+								if (j - verticalSheetColumnCount * Count - 2 == num + cellList.Count)
 								{
 									cell.SetCellValue("-");
 									break;
 								}
 								else
 								{
-									string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
-									cell.SetCellValue(setvalue);
+									cell.SetCellValue(dilutionratioTextBox.Text);
 								}
 							}
 						}
 						else
 						{
-							string setvalue = ((j - verticalSheetColumnCount * Count) == 1) ? dilutionratioLabel.Content.ToString() : dilutionratioTextBox.Text;
-							cell.SetCellValue(setvalue);
+							cell.SetCellValue(dilutionratioTextBox.Text);
 						}
 					}
+					//第四行
 					else if ((j - verticalSheetColumnCount * Count) == 1)
 					{
 						cell.SetCellValue("样品编号");
 					}
-					else if ((j - verticalSheetColumnCount * Count) - 2 < cellList.Count)
+					else
 					{
-						cell.SetCellValue(cellList[(j - verticalSheetColumnCount * Count) - 2]);
-					}
+						//是Ci浓度的样品
+						if (j - verticalSheetColumnCount * Count - 2 < cellList.Count)
+						{
+							cell.SetCellValue(cellList[j - verticalSheetColumnCount * Count - 2]);
+						}
+						//是C浓度
+						else if (j - verticalSheetColumnCount * Count - 2 < cellList.Count * 2)
+						{
+							cell.SetCellValue(cellList[j - verticalSheetColumnCount * Count - 2 - cellList.Count]);
+						}
+						else if (j - verticalSheetColumnCount * Count - 2 >= cellList.Count * 2 && j - verticalSheetColumnCount * Count - 2 < cellList.Count + importTakeNum)
+						{
+							cell.SetCellValue(cellList[j - verticalSheetColumnCount * Count - 2 - importTakeNum]);
+						}
+					} 
+
 				}
 			}
 			//第四行表头
@@ -1158,9 +1206,16 @@ namespace WPFTest
 			{
 				var cell = HearderRow.CreateCell(k);
 				cell.CellStyle = cellStyle;
-				if (!sheet.MergedRegions.Exists(x => x.FirstRow == 4 && x.LastRow == 4 && x.FirstColumn == 2 + verticalSheetColumnCount * Count && x.LastColumn == 9 + verticalSheetColumnCount * Count))
+				//合并Ci
+				if (!sheet.MergedRegions.Exists(x => x.FirstRow == 4 && x.LastRow == 4 && x.FirstColumn == 2 + verticalSheetColumnCount * Count && x.LastColumn == 5 + verticalSheetColumnCount * Count))
 				{
-					CellRangeAddress newregion = new CellRangeAddress(4,4,2 + verticalSheetColumnCount * Count,9 + verticalSheetColumnCount * Count);
+					CellRangeAddress newregion = new CellRangeAddress(4,4,2 + verticalSheetColumnCount * Count,5 + verticalSheetColumnCount * Count);
+					sheet.AddMergedRegion(newregion);
+				}
+				//合并C
+				if (!sheet.MergedRegions.Exists(x => x.FirstRow == 4 && x.LastRow == 4 && x.FirstColumn == 6 + verticalSheetColumnCount * Count && x.LastColumn == 9 + verticalSheetColumnCount * Count))
+				{
+					CellRangeAddress newregion = new CellRangeAddress(4,4,6 + verticalSheetColumnCount * Count,9 + verticalSheetColumnCount * Count);
 					sheet.AddMergedRegion(newregion);
 				}
 				if (k == 0 + verticalSheetColumnCount * Count)
@@ -1180,7 +1235,11 @@ namespace WPFTest
 				}
 				else if (k == 2 + verticalSheetColumnCount * Count)
 				{
-					cell.SetCellValue("目标化合物浓度 C (" + TargetCompanyComboBox.Text + ")");
+					cell.SetCellValue("目标物上机测定浓度 Ci (" + TargetCompanyComboBox.Text + ")");
+				}
+				else if (k == 6 + verticalSheetColumnCount * Count)
+				{
+					cell.SetCellValue("目标化合物浓度 C (" + ZDJCCompanyComboBox.Text + ")");
 				}
 			}
 
@@ -1188,10 +1247,7 @@ namespace WPFTest
 			{
 				HSSFRow compoundsRow = (Count == 0) ? (HSSFRow)sheet.CreateRow(4 + k + 1) : (HSSFRow)sheet.GetRow(4 + k + 1); //创建行或者获取行
 				compoundsRow.HeightInPoints = 20;
-				//var headerCell = compoundsRow.CreateCell(0);
 				string compoundName = compoundsNameList[k].Key;
-				//headerCell.SetCellValue(compoundName);
-				//headerCell.CellStyle = cellStyle;
 				string modelC = compoundsNameList[k].Value;
 				for (int l = verticalSheetColumnCount * Count; l < verticalSheetColumnCount * Count + verticalSheetColumnCount; l++)
 				{
@@ -1208,8 +1264,10 @@ namespace WPFTest
 						{
 							compoundsCell.SetCellValue(modelC);
 						}
+						//前四列是浓度度数
 						else if (l - verticalSheetColumnCount * Count - 2 < cellList.Count)
 						{
+
 							if (modelC == string.Empty)
 							{
 								compoundsCell.SetCellValue(string.Empty);
@@ -1219,19 +1277,87 @@ namespace WPFTest
 								string sampleName = cellList[l - verticalSheetColumnCount * Count - 2];
 								if (sampleName.Contains("平均"))
 								{
-									//获取平均样的位置
-									int num = newsampleNameList.IndexOf(sampleName);
-									//平均样的前两个加起来除以二就是平均值
-									string setvalue = CompareCompoundWithFormula(compoundName,modelC,newsampleNameList[num - 1],newsampleNameList[num - 2]);
-									compoundsCell.SetCellValue(setvalue);
+									compoundsCell.SetCellValue("-");
 								}
 								else
 								{
-									string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
-									compoundsCell.SetCellValue(setvalue);
+									foreach (DataTable dataTable in compoundsDataSet.Tables)
+									{
+										if (dataTable.TableName == compoundName)
+										{
+											//找到该化合物对应的样品编号和浓度数据
+											foreach (DataRow dataRow in dataTable.Rows)
+											{
+												string dtsampleName = dataRow["数据文件名"].ToString();
+												if (dtsampleName == sampleName)
+												{
+													string potency = dataRow["浓度"].ToString();
+													compoundsCell.SetCellValue(potency);
+												}
+											}
+										}
+									}
 								}
 							}
 						}
+						else if (cellList.Count == importTakeNum)
+						{
+							//后四列是计算判断
+							if (l - verticalSheetColumnCount * Count - 2 >= cellList.Count && l - verticalSheetColumnCount * Count - 2 < cellList.Count * 2)
+							{
+								if (modelC == string.Empty)
+								{
+									compoundsCell.SetCellValue(string.Empty);
+								}
+								else
+								{
+									string sampleName = cellList[l - verticalSheetColumnCount * Count - 2 - cellList.Count];
+									if (sampleName.Contains("平均"))
+									{
+										//获取平均样的位置
+										int num = newsampleNameList.IndexOf(sampleName);
+										//平均样的前两个加起来除以二就是平均值
+										string setvalue = CompareCompoundWithFormula(compoundName,modelC,newsampleNameList[num - 1],newsampleNameList[num - 2]);
+										compoundsCell.SetCellValue(setvalue);
+									}
+									else
+									{
+										string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
+										compoundsCell.SetCellValue(setvalue);
+									}
+								}
+							} 
+						}
+						else if (cellList.Count < importTakeNum)
+						{
+													//最后一版特殊判断
+							if (l - verticalSheetColumnCount * Count - 2 >= importTakeNum && l - verticalSheetColumnCount * Count - 2 < cellList.Count + importTakeNum)
+							{
+								if (modelC == string.Empty)
+								{
+									compoundsCell.SetCellValue(string.Empty);
+								}
+								else
+								{
+									string sampleName = cellList[l - verticalSheetColumnCount * Count - 2 - importTakeNum];
+									if (sampleName.Contains("平均"))
+									{
+										//获取平均样的位置
+										int num = newsampleNameList.IndexOf(sampleName);
+										//平均样的前两个加起来除以二就是平均值
+										string setvalue = CompareCompoundWithFormula(compoundName,modelC,newsampleNameList[num - 1],newsampleNameList[num - 2]);
+										compoundsCell.SetCellValue(setvalue);
+									}
+									else
+									{
+										string setvalue = CompareCompoundWithFormula(compoundName,modelC,sampleName);
+										compoundsCell.SetCellValue(setvalue);
+									}
+								}
+							}
+						}
+
+
 					}
 				}
 			}

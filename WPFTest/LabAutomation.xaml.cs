@@ -602,9 +602,12 @@ namespace WPFTest
 				{
 					case 0:
 						{
+							var reportNameCell = row.CreateCell(horizontalSheetColumnCount - 3);
+							reportNameCell.CellStyle = cellStyle;
+							reportNameCell.SetCellValue("委托单号：");
 							var reportCell = row.CreateCell(horizontalSheetColumnCount - 2);
 							reportCell.CellStyle = cellStyle;
-							reportCell.SetCellValue("委托单号：" + ReportNo);
+							reportCell.SetCellValue(ReportNo);
 							CellRangeAddress region = new CellRangeAddress(i,i,horizontalSheetColumnCount - 2,horizontalSheetColumnCount - 1);
 							sheet.AddMergedRegion(region);
 							break;
@@ -786,6 +789,12 @@ namespace WPFTest
 					}
 					else if (i == 11 && j == 4)
 					{
+						cell.SetCellValue("-");
+						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,j,j + 1);
+						sheet.AddMergedRegion(targetregion);
+					}
+					else if (i == 11 && j == 6)
+					{
 						if (testZDRadioButton.IsChecked == true)
 						{
 							cell.SetCellValue(testZDRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")");
@@ -794,13 +803,25 @@ namespace WPFTest
 						{
 							cell.SetCellValue(testJCRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")");
 						}
-						CellRangeAddress outregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
+						CellRangeAddress outregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,j,horizontalSheetColumnCount - 1);
 						sheet.AddMergedRegion(outregion);
+					}
+					else if (i == 12 && j == 4)
+					{
+						cell.SetCellValue("-");
+						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,j,j + 1);
+						sheet.AddMergedRegion(targetregion);
 					}
 					else if (i == 13 && j == 4)
 					{
-						cell.SetCellValue("目标化合物浓度(" + TargetCompanyComboBox.Text + ")");
-						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,Count,horizontalSheetColumnCount - 1);
+						cell.SetCellValue("目标化合物测定值Ci(" + TargetCompanyComboBox.Text + ")");
+						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,j,j + 1);
+						sheet.AddMergedRegion(targetregion);
+					}
+					else if (i == 13 && j == 6)
+					{
+						cell.SetCellValue("目标化合物浓度C(" + ZDJCCompanyComboBox.Text + ")");
+						CellRangeAddress targetregion = new CellRangeAddress(formalrow.RowNum,formalrow.RowNum,j,horizontalSheetColumnCount - 1);
 						sheet.AddMergedRegion(targetregion);
 					}
 					else
@@ -857,7 +878,7 @@ namespace WPFTest
 				Count++;
 			}
 
-			//自动调整列距
+			// 自动调整列距
 			for (int i = 0; i < verticalSheetColumnCount * Count; i++)
 			{
 				if (i % verticalSheetColumnCount == 0)
@@ -938,73 +959,86 @@ namespace WPFTest
 			HSSFRow limitrow = (HSSFRow)sheet.GetRow(12);
 			var sampleCell = samplerow.GetCell(Count);
 			sampleCell.SetCellValue(compoundName);//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
-			var limitCell = limitrow.GetCell(Count);
+			var anSampleCell = samplerow.GetCell(Count + 2);
+			anSampleCell.SetCellValue(compoundName);//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
+			var limitCell = limitrow.GetCell(Count + 2);
 			limitCell.SetCellValue(modelC);//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
 
 			foreach (string sampleName in newsampleNameList.OrderBy(x=>x.Trim()))
 			{
-				HSSFRow row;
-				if (Count == 4)
+				for (int i = 0; i < horizontalSheetColumnCount; i++)
 				{
-					row = (HSSFRow)sheet.CreateRow(sheet.PhysicalNumberOfRows);
+					HSSFRow row = (i == 0 && Count == 4) ? (HSSFRow)sheet.CreateRow(sheet.PhysicalNumberOfRows) : (HSSFRow)sheet.GetRow(14 + newsampleNameList.OrderBy(x => x.Trim()).ToList().IndexOf(sampleName));
 					row.HeightInPoints = 20;
-					//还是把每个cell弄出来慢慢做
-					for (int i = 0; i < Count + 1; i++)
-					{
-						var cell = row.CreateCell(i);
-						cell.CellStyle = cellStyle;
+					int a = row.LastCellNum;
+					var cell = (row.Cells.Contains(row.GetCell(i))) ? row.GetCell(i) : row.CreateCell(i);
+					cell.CellStyle = cellStyle;
 
-						//赋值
-						if (i == Count)
+					if (i == 0 && Count == 4)
+					{
+						cell.SetCellValue(sampleName);
+					}
+					else if (i == 1 && Count == 4)
+					{
+						string setvalue = (sampleName == "以下空白") ? string.Empty : samplingquantityTextBox.Text;
+						cell.SetCellValue(setvalue);
+					}
+					else if (i == 2 && Count == 4)
+					{
+						string setvalue = (sampleName == "以下空白") ? string.Empty : dilutionratioTextBox.Text;
+						cell.SetCellValue(setvalue);
+					}
+					else if (i == 3 && Count == 4)
+					{
+						string setvalue = (sampleName == "以下空白") ? string.Empty : constantvolumeTextBox.Text;
+						cell.SetCellValue(setvalue);
+					}
+					else if (i == Count)
+					{
+
+						if (sampleName.Contains("平均"))
 						{
-							string setvalue = (sampleName == "以下空白") ? string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
+							cell.SetCellValue("-----");
+						}
+						else
+						{
+							foreach (DataTable dataTable in compoundsDataSet.Tables)
+							{
+								if (dataTable.TableName == compoundName)
+								{
+									//找到该化合物对应的样品编号和浓度数据
+									foreach (DataRow dataRow in dataTable.Rows)
+									{
+										string dtsampleName = dataRow["数据文件名"].ToString();
+										if (dtsampleName == sampleName)
+										{
+											string potency = dataRow["浓度"].ToString();
+											cell.SetCellValue(potency);
+										}
+									}
+								}
+							}
+						}
+					}
+					else if (i == Count + 2)
+					{
+						if (sampleName.Contains("平均"))
+						{
+							//获取平均样的位置
+							int num = newsampleNameList.IndexOf(sampleName);
+							//平均样的前两个加起来除以二就是平均值
+							string setvalue = CompareCompoundWithFormula(compoundName,modelC,newsampleNameList[num - 1],newsampleNameList[num - 2]);
 							cell.SetCellValue(setvalue);
 						}
 						else
 						{
-							switch (i)
-							{
-								case 0:
-									{
-										cell.SetCellValue(sampleName);
-										break;
-									}
-								case 1:
-									{
-										string setvalue = (sampleName == "以下空白") ? string.Empty : samplingquantityTextBox.Text;
-										cell.SetCellValue(setvalue);
-										break;
-									}
-								case 2:
-									{
-										string setvalue = (sampleName == "以下空白") ? string.Empty : dilutionratioTextBox.Text;
-										cell.SetCellValue(setvalue);
-										break;
-									}
-								case 3:
-									{
-										string setvalue = (sampleName == "以下空白") ? string.Empty : constantvolumeTextBox.Text;
-										cell.SetCellValue(setvalue);
-										break;
-									}
-								default:
-									{
-										break;
-									}
-							}
+							string setvalue = (sampleName == "以下空白") ? string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
+							cell.SetCellValue(setvalue);
 						}
 					}
 				}
-				else
-				{
-					row = (HSSFRow)sheet.GetRow(14 + newsampleNameList.OrderBy(x => x.Trim()).ToList().IndexOf(sampleName));
-					var cell = row.CreateCell(Count);
-					cell.CellStyle = cellStyle;
-					string setvalue = (sampleName == "以下空白") ? string.Empty : CompareCompoundWithFormula(compoundName,modelC,sampleName);
-					cell.SetCellValue(setvalue);
-				}
-			}
-		}
+            }
+        }
 
 
 		/// <summary>
@@ -1267,7 +1301,6 @@ namespace WPFTest
 						//前四列是浓度度数
 						else if (l - verticalSheetColumnCount * Count - 2 < cellList.Count)
 						{
-
 							if (modelC == string.Empty)
 							{
 								compoundsCell.SetCellValue(string.Empty);
@@ -1277,7 +1310,7 @@ namespace WPFTest
 								string sampleName = cellList[l - verticalSheetColumnCount * Count - 2];
 								if (sampleName.Contains("平均"))
 								{
-									compoundsCell.SetCellValue("-");
+									compoundsCell.SetCellValue("-----");
 								}
 								else
 								{
@@ -1330,7 +1363,7 @@ namespace WPFTest
 						}
 						else if (cellList.Count < importTakeNum)
 						{
-													//最后一版特殊判断
+							//最后一版特殊判断
 							if (l - verticalSheetColumnCount * Count - 2 >= importTakeNum && l - verticalSheetColumnCount * Count - 2 < cellList.Count + importTakeNum)
 							{
 								if (modelC == string.Empty)

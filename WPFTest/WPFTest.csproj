@@ -5,11 +5,20 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
 	<UseWindowsForms>true</UseWindowsForms>
+	<ApplicationIcon></ApplicationIcon>
 	<!--<UseVisualBasic>true</UseVisualBasic>-->
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="favicon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NPOI" Version="2.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icon\favicon.ico" />
   </ItemGroup>
 
 </Project>

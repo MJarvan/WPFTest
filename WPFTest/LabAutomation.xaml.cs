@@ -229,8 +229,8 @@ namespace WPFTest
 							foreach (TabItem tabItem in tabControl.Items)
 							{
 								StackPanel stackPanel = tabItem.Header as StackPanel;
-								Label label = stackPanel.Children[0] as Label;
-								TextBox textBox = stackPanel.Children[1] as TextBox;
+								Label label = stackPanel.Children[1] as Label;
+								TextBox textBox = stackPanel.Children[2] as TextBox;
 								if (label.Content.ToString() == key)
 								{
 									textBox.Text = value;
@@ -276,7 +276,7 @@ namespace WPFTest
 
 				foreach (List<string> vs in txtList)
 				{
-					bool isOK = CreateDataTable(tabControl,vs);
+					bool isOK = CreateDataTable(tabControl,vs,txtList.IndexOf(vs));
 					if (!isOK)
 					{
 						return;
@@ -295,6 +295,7 @@ namespace WPFTest
 		private void AllClear()
 		{
 			txtList.Clear();
+			preCompoundsNameList.Clear();
 			compoundsNameList.Clear();
 			sampleNameList.Clear();
 			newsampleNameList.Clear();
@@ -305,7 +306,7 @@ namespace WPFTest
 			finalsampleNameList.Clear();
 		}
 
-		private bool CreateDataTable(TabControl tabControl,List<string> vs)
+		private bool CreateDataTable(TabControl tabControl,List<string> vs,int vsNum)
 		{
 			//前三列是datatable的属性名和表头需要单独保存
 			//string[] id = vs[0].Split("\t");
@@ -393,7 +394,7 @@ namespace WPFTest
 
 			TabItem tabItem = new TabItem();
 			//tabItem.Header = name[1] + " | " + name[2];
-			StackPanel stackPanel = CreateStackPanel(name[1]);
+			StackPanel stackPanel = CreateStackPanel(name[1],vsNum);
 			tabItem.Header = stackPanel;
 			DataGrid dg = new DataGrid();
 			dg.Name = "dataGrid";
@@ -411,16 +412,22 @@ namespace WPFTest
 		/// 创建tabheader用的stackpanel
 		/// </summary>
 		/// <returns></returns>
-		private StackPanel CreateStackPanel(string compoundsName)
+		private StackPanel CreateStackPanel(string compoundsName,int num)
 		{
 			StackPanel stackPanel = new StackPanel();
 			stackPanel.Orientation = Orientation.Horizontal;
 			stackPanel.VerticalAlignment = System.Windows.VerticalAlignment.Center;
 			stackPanel.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-			Label label = new Label();
-			label.Content = compoundsName;
-			label.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
-			label.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+
+			Label numLabel = new Label();
+			numLabel.Content = (num + 1).ToString() + ".";
+			numLabel.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
+			numLabel.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+
+			Label compoundslabel = new Label();
+			compoundslabel.Content = compoundsName;
+			compoundslabel.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
+			compoundslabel.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
 			TextBox textBox = new TextBox();
 			textBox.Width = 50;
 			textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
@@ -436,7 +443,8 @@ namespace WPFTest
 				}
 			}
 
-			stackPanel.Children.Add(label);
+			stackPanel.Children.Add(numLabel);
+			stackPanel.Children.Add(compoundslabel);
 			stackPanel.Children.Add(textBox);
 
 			return stackPanel;
@@ -559,17 +567,13 @@ namespace WPFTest
 
 							modelC = (item as TextBox).Text;
 						}
-						else
-						{
-							return;
-						}
 					}
 				}
 				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>(compoundsName,modelC);
 				compoundsNameList.Add(keyValuePair);
 			}
 
-			if (compoundsNameList.Count > 4)
+			if (compoundsNameList.Count > 2)
 			{
 				KeyValuePair<string,string> keyValuePair = new KeyValuePair<string,string>("以下空白",string.Empty);
 				compoundsNameList.Add(keyValuePair);
@@ -689,24 +693,36 @@ namespace WPFTest
 							CellRangeAddress region = new CellRangeAddress(i,8,horizontalSheetColumnCount - 2,horizontalSheetColumnCount - 1);
 							sheet.AddMergedRegion(region);
 							//要和公式那一块绑定在一起
-							StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
-							if (FormulaComboBox.Text.Contains("X"))
+							double k = double.Parse(coefficientTextBox.Text);
+							if (k != 1)
 							{
-								stringBuilder.Append("X—水样TPH的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+								StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + " × k" + "\n");
+								stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+								//测定浓度要根据她自己填的
+								stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
+								if (FormulaComboBox.Text.Contains("V1"))
+								{
+									stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
+								}
+								stringBuilder.Append("f——稀释倍数\n");
+								stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
+								stringBuilder.Append("k——系数(" + coefficientTextBox.Text + ")\n");
+								formulacell.SetCellValue(stringBuilder.ToString());
 							}
 							else
 							{
+								StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
 								stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
-							}
-							//测定浓度要根据她自己填的
-							stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
-							if (FormulaComboBox.Text.Contains("V1"))
-							{
-								stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
-							}
-							stringBuilder.Append("f——稀释倍数\n");
-							stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
-							formulacell.SetCellValue(stringBuilder.ToString());
+								//测定浓度要根据她自己填的
+								stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
+								if (FormulaComboBox.Text.Contains("V1"))
+								{
+									stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
+								}
+								stringBuilder.Append("f——稀释倍数\n");
+								stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
+								formulacell.SetCellValue(stringBuilder.ToString());
+							} 
 							break;
 						}
 					case 5:
@@ -998,7 +1014,7 @@ namespace WPFTest
 
 						if (sampleName.Contains("平均"))
 						{
-							cell.SetCellValue("-----");
+							cell.SetCellValue("-");
 						}
 						else
 						{
@@ -1013,7 +1029,14 @@ namespace WPFTest
 										if (dtsampleName == sampleName)
 										{
 											string potency = dataRow["浓度"].ToString();
-											cell.SetCellValue(potency);
+											if (potency.Contains("-"))
+											{
+												cell.SetCellValue(CalculateAccuracyC(compoundName,"0"));
+											}
+											else
+											{
+												cell.SetCellValue(potency);
+											}
 										}
 									}
 								}
@@ -1073,24 +1096,36 @@ namespace WPFTest
 					CellRangeAddress region = new CellRangeAddress(0,3,verticalSheetColumnCount * Count,verticalSheetColumnCount * Count);
 					sheet.AddMergedRegion(region);
 					//要和公式那一块绑定在一起
-					StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
-					if (FormulaComboBox.Text.Contains("X"))
+					double k = double.Parse(coefficientTextBox.Text);
+					if (k != 1)
 					{
-						stringBuilder.Append("X—水样TPH的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+						StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + " × k" + "\n");
+						stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+						//测定浓度要根据她自己填的
+						stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
+						if (FormulaComboBox.Text.Contains("V1"))
+						{
+							stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
+						}
+						stringBuilder.Append("f——稀释倍数\n");
+						stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
+						stringBuilder.Append("k——系数(" + coefficientTextBox.Text + ")\n");
+						formulacell.SetCellValue(stringBuilder.ToString());
 					}
 					else
 					{
+						StringBuilder stringBuilder = new StringBuilder("计算公式：" + FormulaComboBox.Text + "\n");
 						stringBuilder.Append("C—样品中目标物的质量浓度(" + ZDJCCompanyComboBox.Text + ")\n");
+						//测定浓度要根据她自己填的
+						stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
+						if (FormulaComboBox.Text.Contains("V1"))
+						{
+							stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
+						}
+						stringBuilder.Append("f——稀释倍数\n");
+						stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
+						formulacell.SetCellValue(stringBuilder.ToString());
 					}
-					stringBuilder.Append("Ci——目标物上机测定浓度(" + TargetCompanyComboBox.Text + ")\n");
-					if (FormulaComboBox.Text.Contains("V1"))
-					{
-						stringBuilder.Append("V1——定容体积(" + constantvolumeComboBox.Text + ")\n");
-					}
-					stringBuilder.Append("f——稀释倍数\n");
-					stringBuilder.Append("V——取样量(" + samplingquantityComboBox.Text + ")\n");
-					formulacell.SetCellValue(stringBuilder.ToString());//合并单元格后，只需对第一个位置赋值即可（TODO:顶部标题）
-
 				}
 				//从第二列开始
 				for (int j = verticalSheetColumnCount * Count + 1; j < verticalSheetColumnCount * Count + verticalSheetColumnCount; j++)
@@ -1310,7 +1345,7 @@ namespace WPFTest
 								string sampleName = cellList[l - verticalSheetColumnCount * Count - 2];
 								if (sampleName.Contains("平均"))
 								{
-									compoundsCell.SetCellValue("-----");
+									compoundsCell.SetCellValue("-");
 								}
 								else
 								{
@@ -1325,7 +1360,14 @@ namespace WPFTest
 												if (dtsampleName == sampleName)
 												{
 													string potency = dataRow["浓度"].ToString();
-													compoundsCell.SetCellValue(potency);
+													if (potency.Contains("-"))
+													{
+														compoundsCell.SetCellValue(CalculateAccuracyC(compoundName,"0"));
+													}
+													else
+													{
+														compoundsCell.SetCellValue(potency);
+													}
 												}
 											}
 										}
@@ -1715,7 +1757,14 @@ namespace WPFTest
 							answer = Math.Round(double.Parse(C),beforeValue[beforeValue.Length - 1].Length);
 						}
 						string[] afterValue = answer.ToString().Trim().Split(".");
-						num = beforeValue[beforeValue.Length - 1].Length - afterValue[afterValue.Length - 1].Length;
+						if (afterValue.Length < 2)
+						{
+							num = beforeValue[beforeValue.Length - 1].Length;
+						}
+						else
+						{
+							num = beforeValue[beforeValue.Length - 1].Length - afterValue[afterValue.Length - 1].Length;
+						}
 					}
 				}
 			}
@@ -1723,21 +1772,31 @@ namespace WPFTest
 			else
 			{
 				string[] beforeValue = accuracy.Split(":");
-
 				answer = Math.Round(double.Parse(C),int.Parse(beforeValue[beforeValue.Length - 1]));
 				string[] afterValue = answer.ToString().Trim().Split(".");
 				num = int.Parse(beforeValue[beforeValue.Length - 1]) - afterValue[afterValue.Length - 1].Length;
-
 			}
 			//计算后补零
 			if (num != 0)
 			{
-				string newanswer = answer.ToString();
-				for (int i = 0; i < num; i++)
+				if (answer.ToString().Contains("."))
 				{
-					newanswer += "0";
+					string newanswer = answer.ToString();
+					for (int i = 0; i < num; i++)
+					{
+						newanswer += "0";
+					}
+					return newanswer;
 				}
-				return newanswer;
+				else
+				{
+					string newanswer = answer.ToString() + ".";
+					for (int i = 0; i < num; i++)
+					{
+						newanswer += "0";
+					}
+					return newanswer;
+				}
 			}
 			return answer.ToString().Trim();
 		}
@@ -1964,7 +2023,6 @@ namespace WPFTest
 		}
 
 		#region 辅助函数
-
 		/// <summary>
 		/// 获取父可视对象中第一个指定类型的子可视对象
 		/// </summary>

@@ -5,15 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPFTest"
         mc:Ignorable="d"
-        Title="LabAutomation" Height="600" Width="1200"
-        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+        Title="有机组最帅" Height="600" Width="1200"
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" Icon="Icon/favicon.ico">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="43*"/>
+            <ColumnDefinition Width="1157*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="9*" />
         </Grid.RowDefinitions>
         <!--菜单栏部分-->
-        <ScrollViewer Tag="0" Name="topScrollViewer" Grid.Row="0"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Tag="0" Name="topScrollViewer" Grid.Row="0"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2">
             <Grid>
                 <!--计算公式部分-->
                 <StackPanel VerticalAlignment="Center">
@@ -67,9 +71,9 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
-           
+
         <!--下方内容部分-->
-        <ScrollViewer Tag="1" Name="mainScrollViewer" Grid.Row="1"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Tag="1" Name="mainScrollViewer"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2" Margin="0,58,0,0" Grid.RowSpan="2">
             <Border BorderThickness="1" BorderBrush="Black" Name="gridborder" >
                 <Grid>
                     <Grid.RowDefinitions>
@@ -106,9 +110,9 @@
 
                         <Label Name="FormulaLabel" Content="公式：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
                         <ComboBox VerticalAlignment="Center" MinWidth="50" Name="FormulaComboBox">
-                            <ComboBoxItem Content="C = Ci×f×V1 / V" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Content="C = Ci × f × V1 / V" IsSelected="True"></ComboBoxItem>
                             <ComboBoxItem Content="C = Ci × f / V"></ComboBoxItem>
-                            <ComboBoxItem Content="X = Ci * f * (V1 / V) * (1/1000)"></ComboBoxItem>
+                            <!--<ComboBoxItem Content="X = Ci * f * (V1 / V) * (1/1000)"></ComboBoxItem>-->
                         </ComboBox>
                         <RadioButton Name="testZDRadioButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
                         <RadioButton Name="testJCRadioButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
@@ -120,7 +124,7 @@
                         </ComboBox>
                     </StackPanel>
                     <Grid Grid.Row="1" Name="maingrid">
-                        
+
                     </Grid>
                 </Grid>
             </Border>
